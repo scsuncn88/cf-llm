@@ -1,204 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat with AI</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+<script>
+  const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // 登录接口
+  const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 聊天接口
+
+  const authContainer = document.getElementById('auth-container');
+  const chatContainer = document.getElementById('chat-container');
+  const loginButton = document.getElementById('login-button');
+  const sendButton = document.getElementById('send-button');
+  const chatBox = document.getElementById('chat-box');
+  const messageInput = document.getElementById('message-input');
+
+  let apiKey = null;
+
+  // 显示登录界面
+  authContainer.style.display = 'flex';
+
+  // 登录逻辑
+  loginButton.addEventListener('click', async () => {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!username || !password) {
+      alert('Please enter both username and password.');
+      return;
     }
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    #auth-container, #chat-container {
-      width: 100%;
-      max-width: 600px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      display: none;
-      flex-direction: column;
-    }
-    #chat-container {
-      height: 90vh;
-    }
-    #chat-box {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 10px;
-    }
-    .message {
-      margin-bottom: 15px;
-      word-wrap: break-word;
-    }
-    .user {
-      text-align: right;
-      color: #007bff;
-    }
-    .ai {
-      text-align: left;
-      color: #28a745;
-    }
-    #chat-input {
-      display: flex;
-    }
-    textarea {
-      flex: 1;
-      resize: none;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      margin-left: 10px;
-      background: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-  </style>
-</head>
-<body>
-  <!-- 登录界面 -->
-  <div id="auth-container">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button id="login-button">Login</button>
-  </div>
 
-  <!-- 聊天界面 -->
-  <div id="chat-container">
-    <div id="chat-box"></div>
-    <div id="chat-input">
-      <textarea id="message-input" rows="1" placeholder="Type your message here..."></textarea>
-      <button id="send-button" disabled>Send</button>
-    </div>
-  </div>
+    try {
+      const response = await fetch(API_LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-  <script>
-    const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // 登录接口
-    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 聊天接口
+      const data = await response.json();
 
-    const authContainer = document.getElementById('auth-container');
-    const chatContainer = document.getElementById('chat-container');
-    const loginButton = document.getElementById('login-button');
-    const sendButton = document.getElementById('send-button');
-    const chatBox = document.getElementById('chat-box');
-    const messageInput = document.getElementById('message-input');
-
-    let apiKey = null;
-
-    // 显示登录界面
-    authContainer.style.display = 'flex';
-
-    // 登录逻辑
-    loginButton.addEventListener('click', async () => {
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      if (!username || !password) {
-        alert('Please enter both username and password.');
-        return;
-      }
-
-      try {
-        const response = await fetch(API_LOGIN_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (response.status === 200 && data.apiKey) {
-          apiKey = data.apiKey; // 保存 apiKey
-          authContainer.style.display = 'none';
-          chatContainer.style.display = 'flex';
-          sendButton.disabled = false;
-
-          appendMessage('Login successful. You can now start chatting.', 'ai');
-        } else {
-          alert(data.error || 'Login failed.');
-        }
-      } catch (error) {
-        console.error('Login Error:', error);
-        alert('Unable to connect to the server.');
-      }
-    });
-
-    // 添加消息到聊天框
-    const appendMessage = (content, className) => {
-      const messageDiv = document.createElement('div');
-      messageDiv.textContent = content;
-      messageDiv.className = `message ${className}`;
-      chatBox.appendChild(messageDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    };
-
-    // 发送消息逻辑
-    sendButton.addEventListener('click', async () => {
-      const message = messageInput.value.trim();
-      if (!message) return;
-
-      appendMessage(message, 'user');
-      messageInput.value = '';
-      sendButton.disabled = true;
-
-      try {
-        const payload = { type: 'chat', message };
-        const response = await fetch(API_CHAT_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        const aiResponse = data.response || 'No response from AI.';
-        appendMessage(aiResponse, 'ai');
-        console.log('API Response:', data); // 调试日志
-      } catch (error) {
-        appendMessage('Error: Unable to connect to AI.', 'ai');
-        console.error('Fetch Error:', error);
-      } finally {
+      if (response.status === 200 && data.apiKey) {
+        apiKey = data.apiKey; // 保存 apiKey
+        authContainer.style.display = 'none';
+        chatContainer.style.display = 'flex';
         sendButton.disabled = false;
-      }
-    });
 
-    messageInput.addEventListener('keypress', (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendButton.click();
+        appendMessage('Login successful. You can now start chatting.', 'ai');
+      } else {
+        alert(data.error || 'Login failed.');
       }
-    });
+    } catch (error) {
+      console.error('Login Error:', error);
+      alert('Unable to connect to the server.');
+    }
+  });
 
-    // 自适应输入框高度
-    messageInput.addEventListener('input', () => {
-      messageInput.style.height = 'auto';
-      messageInput.style.height = `${messageInput.scrollHeight}px`;
-    });
-  </script>
-</body>
-</html>
+  // 添加消息到聊天框
+  const appendMessage = (content, className) => {
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = content;
+    messageDiv.className = `message ${className}`;
+    chatBox.appendChild(messageDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  };
+
+  // 处理流式数据
+  const handleStream = async (response) => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let content = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      content += chunk;
+
+      // 更新聊天框
+      if (chunk.trim()) {
+        const existingAiMessage = chatBox.querySelector('.ai:last-child');
+        if (existingAiMessage) {
+          existingAiMessage.textContent = content.trim();
+        } else {
+          appendMessage(content.trim(), 'ai');
+        }
+      }
+    }
+  };
+
+  // 发送消息逻辑（支持流式处理）
+  sendButton.addEventListener('click', async () => {
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    appendMessage(message, 'user');
+    messageInput.value = '';
+    sendButton.disabled = true;
+
+    try {
+      const payload = { type: 'stream', message }; // 设置 type 为 stream
+      const response = await fetch(API_CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        appendMessage('', 'ai'); // 添加一个占位符消息
+        await handleStream(response);
+      } else {
+        const errorData = await response.json();
+        appendMessage(`Error: ${errorData.error || 'Unable to connect to AI.'}`, 'ai');
+      }
+    } catch (error) {
+      appendMessage('Error: Unable to connect to AI.', 'ai');
+      console.error('Fetch Error:', error);
+    } finally {
+      sendButton.disabled = false;
+    }
+  });
+
+  messageInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendButton.click();
+    }
+  });
+
+  // 自适应输入框高度
+  messageInput.addEventListener('input', () => {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = `${messageInput.scrollHeight}px`;
+  });
+</script>

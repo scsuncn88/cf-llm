@@ -3,13 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Chat with AI</title>
   <style>
+    /* 全局样式 */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(to bottom, #6a11cb, #2575fc);
@@ -21,91 +26,115 @@
       min-height: 100vh;
       padding: 20px;
     }
-    #auth-container, #chat-container {
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    /* 容器通用样式 */
+    #auth-container,
+    #chat-container {
       width: 100%;
       max-width: 400px;
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       padding: 20px;
       display: none;
       flex-direction: column;
+      gap: 15px;
     }
-    h2 {
-      text-align: center;
-      color: #333;
+
+    #auth-container {
+      display: flex; /* 默认显示登录表单 */
     }
+
     input {
       width: 100%;
       padding: 10px;
-      margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 5px;
+      font-size: 16px;
     }
+
     button {
       width: 100%;
       padding: 10px;
       border: none;
       border-radius: 5px;
-      background-color: #007bff;
+      background: #007bff;
       color: #fff;
+      font-size: 16px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease;
     }
+
     button:disabled {
-      background-color: #ccc;
+      background: #ccc;
       cursor: not-allowed;
     }
+
+    /* 聊天容器样式 */
     #chat-container {
-      height: 100%;
-      max-height: 80vh;
-      display: flex;
-      flex-direction: column;
+      display: none; /* 初始隐藏 */
+      height: 80vh;
     }
+
     #chat-box {
       flex: 1;
       overflow-y: auto;
       border: 1px solid #ddd;
       border-radius: 5px;
-      margin-bottom: 10px;
       padding: 10px;
-      background-color: #f9f9f9;
+      background: #f9f9f9;
+      color: #333;
     }
+
     .message {
       margin-bottom: 10px;
     }
+
     .user {
       text-align: right;
       color: #007bff;
     }
+
     .ai {
       text-align: left;
       color: #28a745;
     }
+
     #chat-input {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     textarea {
       flex: 1;
       border: 1px solid #ccc;
       border-radius: 5px;
-      resize: none;
       padding: 10px;
       font-size: 16px;
-      min-height: 40px;
+      resize: none;
     }
+
     #toggle-stream {
-      background-color: #28a745;
-      color: #fff;
+      width: auto;
+      align-self: flex-end;
       padding: 5px 10px;
+      font-size: 14px;
       border-radius: 5px;
-      margin-bottom: 10px;
+      background: #28a745;
+      color: #fff;
       cursor: pointer;
+      margin-bottom: 10px;
     }
+
     #toggle-stream.active {
-      background-color: #dc3545;
+      background: #dc3545;
     }
   </style>
 </head>
@@ -141,10 +170,7 @@
     const messageInput = document.getElementById('message-input');
 
     let apiKey = null;
-    let isStreamMode = false;
-
-    // 显示登录界面
-    authContainer.style.display = 'flex';
+    let isStreamMode = false; // 默认非流式模式
 
     // 登录逻辑
     loginButton.addEventListener('click', async () => {
@@ -166,8 +192,8 @@
         const data = await response.json();
         if (response.ok && data.apiKey) {
           apiKey = data.apiKey;
-          authContainer.style.display = 'none';
-          chatContainer.style.display = 'flex';
+          authContainer.style.display = 'none'; // 隐藏登录界面
+          chatContainer.style.display = 'flex'; // 显示聊天界面
           sendButton.disabled = false;
         } else {
           alert(data.error || 'Login failed.');
@@ -190,9 +216,9 @@
       const message = messageInput.value.trim();
       if (!message) return;
 
+      appendMessage(message, 'user');
       messageInput.value = '';
       sendButton.disabled = true;
-      appendMessage(message, 'user');
 
       try {
         const response = await fetch(API_CHAT_URL, {
@@ -217,7 +243,6 @@
       }
     });
 
-    // 流模式数据处理
     async function handleStream(response) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -232,7 +257,6 @@
       }
     }
 
-    // 添加消息到聊天框
     function appendMessage(content, className) {
       const message = document.createElement('div');
       message.textContent = content;

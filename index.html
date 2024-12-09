@@ -20,22 +20,23 @@
       min-height: 100vh;
       padding: 20px;
     }
-    #chat-container {
+    #auth-container, #chat-container {
       width: 100%;
       max-width: 600px;
-      height: 100vh;
-      max-height: 90vh;
       background: #fff;
       border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      display: flex;
+      padding: 20px;
+      display: none;
       flex-direction: column;
+    }
+    #chat-container {
+      height: 90vh;
     }
     #chat-box {
       flex: 1;
-      padding: 20px;
       overflow-y: auto;
+      margin-bottom: 10px;
     }
     .message {
       margin-bottom: 15px;
@@ -51,8 +52,6 @@
     }
     #chat-input {
       display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
     }
     textarea {
       flex: 1;
@@ -67,7 +66,7 @@
       background: #007bff;
       color: #fff;
       border: none;
-      padding: 10px 20px;
+      padding: 10px;
       border-radius: 5px;
       font-size: 16px;
       cursor: pointer;
@@ -79,31 +78,75 @@
   </style>
 </head>
 <body>
+  <!-- 登录界面 -->
+  <div id="auth-container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button id="login-button">Login</button>
+  </div>
+
+  <!-- 聊天界面 -->
   <div id="chat-container">
     <div id="chat-box"></div>
     <div id="chat-input">
       <textarea id="message-input" rows="1" placeholder="Type your message here..."></textarea>
-      <button id="send-button">Send</button>
+      <button id="send-button" disabled>Send</button>
     </div>
   </div>
 
   <script>
+    const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // 登录接口
+    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 聊天接口
+
+    const authContainer = document.getElementById('auth-container');
+    const chatContainer = document.getElementById('chat-container');
+    const loginButton = document.getElementById('login-button');
+    const sendButton = document.getElementById('send-button');
     const chatBox = document.getElementById('chat-box');
     const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
 
-    const API_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 替换为你的 Workers 部署地址
+    let apiKey = null;
 
-    // 从 URL 参数中获取 API Key 和 type 参数
-    const urlParams = new URLSearchParams(window.location.search);
-    const API_KEY = urlParams.get('api_key');
-    const TYPE = urlParams.get('type') || 'chat'; // 默认类型为 chat
+    // 显示登录界面
+    authContainer.style.display = 'flex';
 
-    if (!API_KEY) {
-      alert('API Key is missing! Please provide it as a query parameter: ?api_key=YOUR_API_KEY');
-      sendButton.disabled = true;
-    }
+    // 登录逻辑
+    loginButton.addEventListener('click', async () => {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
 
+      if (!username || !password) {
+        alert('Please enter both username and password.');
+        return;
+      }
+
+      try {
+        const response = await fetch(API_LOGIN_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 200 && data.apiKey) {
+          apiKey = data.apiKey; // 保存 apiKey
+          authContainer.style.display = 'none';
+          chatContainer.style.display = 'flex';
+          sendButton.disabled = false;
+
+          appendMessage('Login successful. You can now start chatting.', 'ai');
+        } else {
+          alert(data.error || 'Login failed.');
+        }
+      } catch (error) {
+        console.error('Login Error:', error);
+        alert('Unable to connect to the server.');
+      }
+    });
+
+    // 添加消息到聊天框
     const appendMessage = (content, className) => {
       const messageDiv = document.createElement('div');
       messageDiv.textContent = content;
@@ -112,6 +155,7 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     };
 
+    // 发送消息逻辑
     sendButton.addEventListener('click', async () => {
       const message = messageInput.value.trim();
       if (!message) return;
@@ -121,15 +165,12 @@
       sendButton.disabled = true;
 
       try {
-        const payload = TYPE === 'chat'
-          ? { type: 'chat', message }
-          : { type: 'prompt', message };
-
-        const response = await fetch(API_URL, {
+        const payload = { type: 'chat', message };
+        const response = await fetch(API_CHAT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
+            'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify(payload)
         });
@@ -157,14 +198,6 @@
     messageInput.addEventListener('input', () => {
       messageInput.style.height = 'auto';
       messageInput.style.height = `${messageInput.scrollHeight}px`;
-    });
-
-    // 页面加载后提示用户 API Key 的获取方式
-    window.addEventListener('load', () => {
-      if (!API_KEY) {
-        appendMessage('Please provide an API Key in the URL to start chatting.', 'ai');
-      }
-      appendMessage(`Using mode: ${TYPE}`, 'ai'); // 提示当前使用的类型
     });
   </script>
 </body>

@@ -94,9 +94,10 @@
 
     const API_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 替换为你的 Workers 部署地址
 
-    // 从 URL 参数中获取 API Key
+    // 从 URL 参数中获取 API Key 和 type 参数
     const urlParams = new URLSearchParams(window.location.search);
     const API_KEY = urlParams.get('api_key');
+    const TYPE = urlParams.get('type') || 'chat'; // 默认类型为 chat
 
     if (!API_KEY) {
       alert('API Key is missing! Please provide it as a query parameter: ?api_key=YOUR_API_KEY');
@@ -120,20 +121,26 @@
       sendButton.disabled = true;
 
       try {
+        const payload = TYPE === 'chat'
+          ? { type: 'chat', message }
+          : { type: 'prompt', message };
+
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${API_KEY}`
           },
-          body: JSON.stringify({ message })
+          body: JSON.stringify(payload)
         });
+
         const data = await response.json();
         const aiResponse = data.response || 'No response from AI.';
         appendMessage(aiResponse, 'ai');
+        console.log('API Response:', data); // 调试日志
       } catch (error) {
         appendMessage('Error: Unable to connect to AI.', 'ai');
-        console.error(error);
+        console.error('Fetch Error:', error);
       } finally {
         sendButton.disabled = false;
       }
@@ -157,6 +164,7 @@
       if (!API_KEY) {
         appendMessage('Please provide an API Key in the URL to start chatting.', 'ai');
       }
+      appendMessage(`Using mode: ${TYPE}`, 'ai'); // 提示当前使用的类型
     });
   </script>
 </body>

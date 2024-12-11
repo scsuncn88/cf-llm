@@ -260,7 +260,7 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
           },
-          body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' }) // Add userId here
+          body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' })
         });
     
         console.log('Response status:', response.status);
@@ -271,9 +271,15 @@
           throw new Error(`Server error: ${response.status} - ${response.statusText}\n${errorText}`);
         }
     
-        const data = await response.json();
-        console.log('Response body:', data);
-        appendMessage(data.response || 'No response from AI.', 'ai');
+        if (isStreamMode) {
+          // 处理流式响应
+          await handleStream(response);
+        } else {
+          // 处理非流式 JSON 响应
+          const data = await response.json();
+          console.log('Response body:', data);
+          appendMessage(data.response || 'No response from AI.', 'ai');
+        }
       } catch (error) {
         appendMessage(`Error: Unable to connect. Details: ${error.message}`, 'ai');
         console.error('Chat request error:', error);
@@ -281,7 +287,6 @@
         sendButton.disabled = false;
       }
     });
-
 
     // Handle file upload
     fileInput.addEventListener('change', async () => {
@@ -325,16 +330,33 @@
     async function handleStream(response) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let content = '';
-
+    
+      let buffer = ''; // 用于缓存解码后的数据
+    
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        content += decoder.decode(value);
-        appendMessage(content.trim(), 'ai');
+    
+        buffer += decoder.decode(value, { stream: true });
+    
+        // 逐行处理
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // 保留未完整的一行
+    
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const json = line.slice(6).trim(); // 去掉 'data: ' 前缀
+            try {
+              const parsed = JSON.parse(json);
+              appendMessage(parsed.response || 'No response received.', 'ai');
+            } catch (error) {
+              console.error('Failed to parse SSE JSON:', error, json);
+            }
+          }
+        }
       }
     }
+
 
     function appendMessage(content, className) {
       const message = document.createElement('div');

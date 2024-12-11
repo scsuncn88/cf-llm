@@ -230,7 +230,7 @@
         }
       } catch (error) {
         alert('Unable to connect to the server.');
-        console.error(error);
+        console.error('Login error:', error);
       }
     });
 
@@ -260,6 +260,11 @@
           body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message })
         });
 
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} - ${response.statusText}\n${errorText}`);
+        }
+
         if (isStreamMode) {
           await handleStream(response);
         } else {
@@ -267,7 +272,8 @@
           appendMessage(data.response || 'No response from AI.', 'ai');
         }
       } catch (error) {
-        appendMessage('Error: Unable to connect.', 'ai');
+        appendMessage(`Error: Unable to connect. Details: ${error.message}`, 'ai');
+        console.error('Chat error:', error);
       } finally {
         sendButton.disabled = false;
       }
@@ -291,10 +297,16 @@
             body: formData
           });
 
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Upload error: ${response.status} - ${response.statusText}\n${errorText}`);
+          }
+
           const result = await response.json();
           appendMessage(result.analysis || 'File processed successfully.', 'ai');
         } catch (error) {
-          appendMessage('Error: Unable to upload file.', 'ai');
+          appendMessage(`Error: Unable to upload file. Details: ${error.message}`, 'ai');
+          console.error('File upload error:', error);
         }
       }
     });

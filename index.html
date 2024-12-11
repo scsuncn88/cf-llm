@@ -187,7 +187,7 @@
   <script>
     const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // Login endpoint
     const API_UPLOAD_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/upload'; // File upload endpoint
-    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // Chat endpoint
+    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/chat'; // Corrected Chat endpoint
 
     const authContainer = document.getElementById('auth-container');
     const chatContainer = document.getElementById('chat-container');
@@ -251,6 +251,9 @@
       sendButton.disabled = true;
 
       try {
+        console.log('Sending message to API:', API_CHAT_URL);
+        console.log('Message payload:', { type: isStreamMode ? 'stream' : 'chat', message });
+
         const response = await fetch(API_CHAT_URL, {
           method: 'POST',
           headers: {
@@ -260,20 +263,20 @@
           body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message })
         });
 
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
           const errorText = await response.text();
+          console.error('Error response:', errorText);
           throw new Error(`Server error: ${response.status} - ${response.statusText}\n${errorText}`);
         }
 
-        if (isStreamMode) {
-          await handleStream(response);
-        } else {
-          const data = await response.json();
-          appendMessage(data.response || 'No response from AI.', 'ai');
-        }
+        const data = await response.json();
+        console.log('Response body:', data);
+        appendMessage(data.response || 'No response from AI.', 'ai');
       } catch (error) {
         appendMessage(`Error: Unable to connect. Details: ${error.message}`, 'ai');
-        console.error('Chat error:', error);
+        console.error('Chat request error:', error);
       } finally {
         sendButton.disabled = false;
       }
@@ -299,10 +302,12 @@
 
           if (!response.ok) {
             const errorText = await response.text();
+            console.error('Upload error response:', errorText);
             throw new Error(`Upload error: ${response.status} - ${response.statusText}\n${errorText}`);
           }
 
           const result = await response.json();
+          console.log('Upload response:', result);
           appendMessage(result.analysis || 'File processed successfully.', 'ai');
         } catch (error) {
           appendMessage(`Error: Unable to upload file. Details: ${error.message}`, 'ai');

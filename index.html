@@ -330,12 +330,15 @@
     async function handleStream(response) {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-    
       let buffer = ''; // 用于缓存解码后的数据
+      let isDone = false; // 标记流式响应是否结束
     
-      while (true) {
+      while (!isDone) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          isDone = true;
+          break;
+        }
     
         buffer += decoder.decode(value, { stream: true });
     
@@ -344,20 +347,26 @@
         buffer = lines.pop(); // 保留未完整的一行
     
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith('event: ')) {
+            const event = line.slice(7).trim();
+            if (event === 'done') {
+              isDone = true;
+              break;
+            }
+          } else if (line.startsWith('data: ')) {
             const json = line.slice(6).trim(); // 去掉 'data: ' 前缀
             try {
               const parsed = JSON.parse(json);
               appendMessage(parsed.response || 'No response received.', 'ai');
             } catch (error) {
               console.error('Failed to parse SSE JSON:', error, json);
+              appendMessage(`Error: Failed to parse SSE JSON. Details: ${error.message}`, 'ai');
             }
           }
         }
       }
     }
-
-
+    
     function appendMessage(content, className) {
       const message = document.createElement('div');
       message.textContent = content;

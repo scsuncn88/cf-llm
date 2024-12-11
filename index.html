@@ -245,32 +245,32 @@
     sendButton.addEventListener('click', async () => {
       const message = messageInput.value.trim();
       if (!message) return;
-
+    
       appendMessage(message, 'user');
       messageInput.value = '';
       sendButton.disabled = true;
-
+    
       try {
         console.log('Sending message to API:', API_CHAT_URL);
-        console.log('Message payload:', { type: isStreamMode ? 'stream' : 'chat', message });
-
+        console.log('Message payload:', { type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' });
+    
         const response = await fetch(API_CHAT_URL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`
           },
-          body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message })
+          body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' }) // Add userId here
         });
-
+    
         console.log('Response status:', response.status);
-
+    
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Error response:', errorText);
           throw new Error(`Server error: ${response.status} - ${response.statusText}\n${errorText}`);
         }
-
+    
         const data = await response.json();
         console.log('Response body:', data);
         appendMessage(data.response || 'No response from AI.', 'ai');
@@ -281,6 +281,7 @@
         sendButton.disabled = false;
       }
     });
+
 
     // Handle file upload
     fileInput.addEventListener('change', async () => {

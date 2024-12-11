@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Chat with AI</title>
   <style>
-    /* 全局样式 */
+    /* Global styles */
     * {
       margin: 0;
       padding: 0;
@@ -23,7 +23,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh; /* 确保页面充满屏幕 */
+      height: 100vh; /* Ensures the page fills the screen */
       margin: 0;
    }
 
@@ -33,21 +33,21 @@
       color: #333;
     }
 
-    /* 容器通用样式 */
+    /* Container common styles */
     #auth-container,
     #chat-container {
       display: flex;
       flex-direction: column;
       width: 100%;
       max-width: 400px;
-      height: 100%; /* 填充可用高度 */
+      height: 100%; /* Fill available height */
       background: #fff;
       border-radius: 10px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     #auth-container {
-      display: flex; /* 默认显示登录表单 */
+      display: flex; /* Default to showing the login form */
     }
 
     input {
@@ -73,14 +73,14 @@
       cursor: not-allowed;
     }
 
-    /* 聊天容器样式 */
+    /* Chat container styles */
     #chat-container {
-      display: none; /* 初始隐藏 */
+      display: none; /* Initially hidden */
       height: 80vh;
     }
 
     #chat-box {
-      flex: 1; /* 自动占满剩余空间 */
+      flex: 1; /* Automatically fill remaining space */
       overflow-y: auto;
       padding: 10px;
       border: 1px solid #ddd;
@@ -119,7 +119,7 @@
       padding: 10px;
       font-size: 16px;
       min-height: 40px;
-      max-height: 100px; /* 限制最大高度 */
+      max-height: 100px; /* Limit maximum height */
     }
 
     #toggle-stream {
@@ -137,10 +137,33 @@
     #toggle-stream.active {
       background: #dc3545;
     }
+
+    #file-input {
+      display: none;
+    }
+
+    #file-label {
+      background: #007bff;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    #camera-button {
+      background: #28a745;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <!-- 登录界面 -->
+  <!-- Login interface -->
   <div id="auth-container">
     <h2>Login</h2>
     <input type="text" id="username" placeholder="Username" autocomplete="username">
@@ -148,7 +171,7 @@
     <button id="login-button">Login</button>
   </div>
 
-  <!-- 聊天界面 -->
+  <!-- Chat interface -->
   <div id="chat-container">
     <button id="toggle-stream">Enable Stream Mode</button>
     <div id="chat-box"></div>
@@ -156,11 +179,15 @@
       <textarea id="message-input" rows="1" placeholder="Type your message here..."></textarea>
       <button id="send-button" disabled>Send</button>
     </div>
+    <label id="file-label" for="file-input">Upload File</label>
+    <input type="file" id="file-input">
+    <button id="camera-button">Take Photo</button>
   </div>
 
   <script>
-    const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // 登录接口
-    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // 聊天接口
+    const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login'; // Login endpoint
+    const API_UPLOAD_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/upload'; // File upload endpoint
+    const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/'; // Chat endpoint
 
     const authContainer = document.getElementById('auth-container');
     const chatContainer = document.getElementById('chat-container');
@@ -169,11 +196,13 @@
     const toggleStreamButton = document.getElementById('toggle-stream');
     const chatBox = document.getElementById('chat-box');
     const messageInput = document.getElementById('message-input');
+    const fileInput = document.getElementById('file-input');
+    const cameraButton = document.getElementById('camera-button');
 
     let apiKey = null;
-    let isStreamMode = false; // 默认非流式模式
+    let isStreamMode = false; // Default non-stream mode
 
-    // 登录逻辑
+    // Login logic
     loginButton.addEventListener('click', async () => {
       const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value.trim();
@@ -193,8 +222,8 @@
         const data = await response.json();
         if (response.ok && data.apiKey) {
           apiKey = data.apiKey;
-          authContainer.style.display = 'none'; // 隐藏登录界面
-          chatContainer.style.display = 'flex'; // 显示聊天界面
+          authContainer.style.display = 'none'; // Hide login interface
+          chatContainer.style.display = 'flex'; // Show chat interface
           sendButton.disabled = false;
         } else {
           alert(data.error || 'Login failed.');
@@ -205,14 +234,14 @@
       }
     });
 
-    // 切换流模式
+    // Toggle stream mode
     toggleStreamButton.addEventListener('click', () => {
       isStreamMode = !isStreamMode;
       toggleStreamButton.textContent = isStreamMode ? 'Disable Stream Mode' : 'Enable Stream Mode';
       toggleStreamButton.classList.toggle('active', isStreamMode);
     });
 
-    // 发送消息逻辑
+    // Send message logic
     sendButton.addEventListener('click', async () => {
       const message = messageInput.value.trim();
       if (!message) return;
@@ -242,6 +271,37 @@
       } finally {
         sendButton.disabled = false;
       }
+    });
+
+    // Handle file upload
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (file) {
+        appendMessage(`Uploading file: ${file.name}`, 'user');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+          const response = await fetch(API_UPLOAD_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: formData
+          });
+
+          const result = await response.json();
+          appendMessage(result.analysis || 'File processed successfully.', 'ai');
+        } catch (error) {
+          appendMessage('Error: Unable to upload file.', 'ai');
+        }
+      }
+    });
+
+    // Handle camera button
+    cameraButton.addEventListener('click', () => {
+      alert('Camera functionality is not yet implemented.');
     });
 
     async function handleStream(response) {

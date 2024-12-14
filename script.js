@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const authContainer = document.getElementById('auth-container');
     const chatContainer = document.getElementById('chat-container');
-    const loginButton = document.getElementById('login-button');
+    const loginForm = document.getElementById('login-form');
     const sendButton = document.getElementById('send-button');
     const toggleStreamButton = document.getElementById('toggle-stream');
     const chatBox = document.getElementById('chat-box');
@@ -162,13 +162,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const cameraButton = document.getElementById('camera-button');
 
     console.log('Script.js: Got all DOM elements');
-    console.log('Script.js: Login button:', loginButton);
+    console.log('Script.js: Login form:', loginForm);
 
     // Login handler
-    if (loginButton) {
-        loginButton.addEventListener('click', async function(e) {
-            e.preventDefault();
-            console.log('Script.js: Login button clicked');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault(); // 阻止表单默认提交
+            console.log('Script.js: Login form submitted');
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({ username, password })
                 });
 
+                console.log('Script.js: Response status:', response.status);
                 const data = await response.json();
                 console.log('Script.js: Login response:', data);
 
@@ -207,6 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Unable to connect to the server.');
             }
         });
+    } else {
+        console.error('Script.js: Login form not found in the DOM');
     }
 
     // Stream mode toggle

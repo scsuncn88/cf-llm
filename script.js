@@ -11,18 +11,20 @@ let apiKey = null;
 let isStreamMode = false;
 let currentStreamController = null;
 
-// Initialize Marked.js
-if (typeof marked !== 'undefined') {
-    marked.setOptions({
-        highlight: function(code, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        breaks: true,
-        gfm: true
-    });
+// Initialize Marked.js after DOM is loaded
+function initMarked() {
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+    }
 }
 
 // Helper function to append messages
@@ -322,6 +324,7 @@ async function handleStreamChat(message) {
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Script.js: DOMContentLoaded event fired');
+    initMarked();
     initLogin();
     initChat();
 });

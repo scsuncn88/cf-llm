@@ -381,14 +381,19 @@ async function loadChatHistory() {
     }
 }
 
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    debug('DOM Content Loaded');
+// Initialize everything
+function init() {
+    debug('Initializing application');
     initMarked();
     initLogin();
-});
+    debug('Initialization complete');
+}
 
-// Additional initialization when window is fully loaded
-window.addEventListener('load', function() {
-    debug('Window Loaded');
-});
+// Set up initialization
+if (document.readyState === 'loading') {
+    debug('Document still loading, adding DOMContentLoaded listener');
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    debug('Document already loaded, initializing now');
+    init();
+}

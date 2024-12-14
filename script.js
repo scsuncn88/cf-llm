@@ -1,5 +1,10 @@
+// Debug function
+function debug(message) {
+    console.log(`[DEBUG] ${message}`);
+}
+
 // Immediate debug logs
-console.log('Script.js: Script started');
+debug('Script started');
 
 // API endpoints
 const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login';
@@ -13,6 +18,7 @@ let currentStreamController = null;
 
 // Initialize Marked.js after DOM is loaded
 function initMarked() {
+    debug('Initializing Marked.js');
     if (typeof marked !== 'undefined') {
         marked.setOptions({
             highlight: function(code, lang) {
@@ -24,13 +30,19 @@ function initMarked() {
             breaks: true,
             gfm: true
         });
+        debug('Marked.js initialized successfully');
+    } else {
+        debug('Warning: marked is not defined');
     }
 }
 
 // Helper function to append messages
 function appendMessage(content, className) {
     const chatBox = document.getElementById('chat-box');
-    if (!chatBox) return;
+    if (!chatBox) {
+        debug('Warning: chat-box element not found');
+        return;
+    }
 
     const message = document.createElement('div');
     message.className = `message ${className}`;
@@ -46,58 +58,80 @@ function appendMessage(content, className) {
 
 // Initialize login form
 function initLogin() {
-    console.log('Script.js: Initializing login form');
+    debug('Initializing login form');
     const loginForm = document.getElementById('login-form');
-    console.log('Script.js: Login form element:', loginForm);
+    debug(`Login form element: ${loginForm ? 'found' : 'not found'}`);
 
     if (loginForm) {
-        console.log('Script.js: Adding submit event listener');
+        debug('Adding submit event listener to login form');
         loginForm.addEventListener('submit', handleLogin);
+        
+        // Also add click event to the button as a backup
+        const loginButton = document.getElementById('login-button');
+        if (loginButton) {
+            debug('Adding click event listener to login button');
+            loginButton.addEventListener('click', handleLogin);
+        }
     } else {
-        console.error('Script.js: Login form not found');
+        console.error('Login form not found');
     }
 }
 
 // Handle login submission
 async function handleLogin(e) {
+    debug('Login event triggered');
     e.preventDefault();
-    console.log('Script.js: Form submitted');
-
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-
-    console.log('Script.js: Username length:', username.length);
-    console.log('Script.js: Password length:', password.length);
-
+    
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    
     if (!username || !password) {
+        debug('Username or password input not found');
+        return;
+    }
+
+    const usernameValue = username.value.trim();
+    const passwordValue = password.value.trim();
+
+    debug(`Username length: ${usernameValue.length}`);
+    debug(`Password length: ${passwordValue.length}`);
+
+    if (!usernameValue || !passwordValue) {
         alert('Please enter both username and password.');
         return;
     }
 
     try {
-        console.log('Script.js: Sending login request...');
+        debug('Sending login request...');
         const response = await fetch(API_LOGIN_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+                username: usernameValue, 
+                password: passwordValue 
+            })
         });
 
-        console.log('Script.js: Response status:', response.status);
+        debug(`Response status: ${response.status}`);
         const data = await response.json();
-        console.log('Script.js: Login response:', data);
+        debug(`Login response: ${JSON.stringify(data)}`);
 
         if (response.ok && data.apiKey) {
-            console.log('Script.js: Login successful');
+            debug('Login successful');
             apiKey = data.apiKey;
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'flex';
             document.getElementById('send-button').disabled = false;
         } else {
-            console.log('Script.js: Login failed:', data.error);
+            debug(`Login failed: ${data.error || 'Unknown error'}`);
             alert(data.error || 'Login failed.');
         }
     } catch (error) {
-        console.error('Script.js: Login error:', error);
+        console.error('Login error:', error);
+        debug(`Login error: ${error.message}`);
         alert('Unable to connect to the server.');
     }
 }

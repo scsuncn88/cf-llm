@@ -62,12 +62,53 @@
 
   <!-- Application Script -->
   <script>
-    // Wait for external libraries to load
-    window.addEventListener('load', function() {
-      // Now load the application script
+    // Debug function for script loading
+    function debug(message) {
+      console.log(`[LOADER] ${message}`);
+    }
+
+    // Check if libraries are loaded
+    function checkLibraries() {
+      debug('Checking libraries...');
+      if (typeof marked === 'undefined') {
+        debug('marked is not loaded');
+        return false;
+      }
+      if (typeof hljs === 'undefined') {
+        debug('highlight.js is not loaded');
+        return false;
+      }
+      debug('All libraries are loaded');
+      return true;
+    }
+
+    // Load application script
+    function loadAppScript() {
+      debug('Loading application script...');
       const script = document.createElement('script');
       script.src = 'script.js';
+      script.onload = () => debug('Application script loaded successfully');
+      script.onerror = (e) => debug('Error loading application script: ' + e);
       document.body.appendChild(script);
+    }
+
+    // Wait for DOM content to be loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      debug('DOM content loaded');
+      if (checkLibraries()) {
+        loadAppScript();
+      } else {
+        debug('Waiting for libraries to load...');
+        // Wait for window load event as backup
+        window.addEventListener('load', () => {
+          debug('Window loaded');
+          if (checkLibraries()) {
+            loadAppScript();
+          } else {
+            debug('ERROR: Required libraries failed to load');
+          }
+        });
+      }
     });
   </script>
 </body>

@@ -44,6 +44,9 @@ body {
 /* 登录��器布局 */
 #auth-container {
   margin: 20px;
+  width: calc(100% - 40px);
+  max-width: 400px;
+  box-sizing: border-box;
   padding: 2.5rem 2rem;
   background: rgba(255, 255, 255, 0.85);
   border-radius: 28px;
@@ -63,11 +66,15 @@ body {
 .input-group {
   position: relative;
   margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-group input {
   width: 100%;
+  box-sizing: border-box;
   padding: 1rem 1.2rem;
+  margin: 0;
   border: none;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.9);
@@ -286,20 +293,16 @@ body {
 
 .action-buttons {
   display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0)) 1rem;
-  background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(5px);
-  border-top: 1px solid rgba(0,0,0,0.05);
-  border-radius: 0 0 24px 24px;
   padding: 0.75rem 1rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-  gap: 1rem;
   background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0 0 24px 24px;
 }
 
-.action-button {
-  flex: 1;
+#file-label {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,19 +311,19 @@ body {
   border-radius: 16px;
   font-size: 1rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  border: none;
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
-.action-button:hover {
-  transform: translateY(-1px);
+#file-label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
-#file-label {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+#file-label:active {
+  transform: translateY(0);
 }
 
 #camera-button {
@@ -550,5 +553,19 @@ body {
   #chat-box {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+  }
+}
+
+/* 移动端特别优化 */
+@media (max-width: 480px) {
+  #auth-container {
+    margin: 16px;
+    width: calc(100% - 32px);
+    padding: 1.5rem;
+  }
+  
+  .input-group input {
+    font-size: 16px;
+    padding: 0.8rem 1rem;
   }
 }

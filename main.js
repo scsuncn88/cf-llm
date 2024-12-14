@@ -10,7 +10,6 @@ const toggleStreamButton = document.getElementById('toggle-stream');
 const chatBox = document.getElementById('chat-box');
 const messageInput = document.getElementById('message-input');
 const fileInput = document.getElementById('file-input');
-const cameraButton = document.getElementById('camera-button');
 
 let apiKey = null;
 let isStreamMode = false; // Default non-stream mode
@@ -120,15 +119,18 @@ sendButton.addEventListener('click', async () => {
 });
 
 // Handle file upload
-fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0];
-  if (file) {
-    appendMessage(`Uploading file: ${file.name}`, 'user');
+fileInput.addEventListener('change', async (event) => {
+  const files = Array.from(event.target.files);
+  if (files.length === 0) return;
 
-    const formData = new FormData();
-    formData.append('file', file);
-
+  for (const file of files) {
     try {
+      // 显示上传进度消息
+      appendMessage(`Uploading: ${file.name}`, 'user');
+      
+      const formData = new FormData();
+      formData.append('file', file);
+
       const response = await fetch(API_UPLOAD_URL, {
         method: 'POST',
         headers: {
@@ -138,24 +140,25 @@ fileInput.addEventListener('change', async () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response:', errorText);
-        throw new Error(`Upload error: ${response.status} - ${response.statusText}\n${errorText}`);
+        throw new Error(`Upload failed: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('Upload response:', result);
+      
+      // 显示AI的分析结果
       appendMessage(result.analysis || 'File processed successfully.', 'ai');
+      
+      // 触发触觉反馈
+      triggerHapticFeedback('light');
+      
     } catch (error) {
-      appendMessage(`Error: Unable to upload file. Details: ${error.message}`, 'ai');
-      console.error('File upload error:', error);
+      appendMessage(`Error uploading ${file.name}: ${error.message}`, 'ai');
+      console.error('Upload error:', error);
     }
   }
-});
-
-// Handle camera button
-cameraButton.addEventListener('click', () => {
-  alert('Camera functionality is not yet implemented.');
+  
+  // 清空文件选择，允许重复选择同一文件
+  event.target.value = '';
 });
 
 async function handleStream(response) {

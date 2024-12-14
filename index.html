@@ -223,77 +223,140 @@
 
     .input-container {
       display: flex;
+      align-items: center;
       gap: 0.75rem;
-      align-items: flex-end;
-      background: white;
-      border-radius: 12px;
+      background: #f0f2f5;
+      border-radius: 24px;
       padding: 0.5rem;
+      margin-bottom: 0.5rem;
     }
 
     #message-input {
       flex: 1;
-      padding: 0.75rem;
       border: none;
-      border-radius: 8px;
-      resize: none;
+      background: transparent;
+      padding: 0.75rem;
       font-size: 1rem;
-      background: #f7fafc;
-      max-height: 120px;
-      min-height: 40px;
       line-height: 1.5;
+      color: #1a1a1a;
+      resize: none;
+      min-height: 24px;
+      max-height: 150px;
     }
 
     #message-input:focus {
       outline: none;
-      background: white;
-      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    #message-input::placeholder {
+      color: #8e8e93;
     }
 
     #send-button {
-      background: #667eea;
+      background: #6366f1;
       color: white;
+      border: none;
+      border-radius: 20px;
       padding: 0.75rem 1.25rem;
-      border-radius: 12px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
       transition: all 0.2s ease;
+      min-width: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    #send-button:hover:not(:disabled) {
-      background: #5a67d8;
+    #send-button:hover {
+      background: #4f46e5;
       transform: translateY(-1px);
     }
 
-    #send-button:disabled {
-      background: #cbd5e0;
-      cursor: not-allowed;
+    #send-button:active {
+      transform: translateY(0);
     }
 
     .action-buttons {
       display: flex;
       gap: 0.75rem;
-      padding: 0.75rem;
+      padding: 0.5rem 1rem;
       background: white;
-      margin: 0;
       border-top: 1px solid rgba(0, 0, 0, 0.05);
-      padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); /* iOS 安全区域 */
     }
 
-    #file-label,
-    #camera-button {
+    .action-button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
       padding: 0.75rem;
       border-radius: 12px;
-      font-size: 0.875rem;
+      font-size: 0.9375rem;
       font-weight: 500;
-      transition: all 0.2s ease;
-      background: #4299e1;
-      color: white;
       cursor: pointer;
-      display: inline-block;
-      text-align: center;
-      line-height: 1;
+      transition: all 0.2s ease;
+      border: none;
+      color: white;
+      max-width: 160px;
+    }
+
+    #file-label {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    }
+
+    #file-label:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      transform: translateY(-1px);
     }
 
     #camera-button {
-      background: #48bb78;
+      background: linear-gradient(135deg, #34d399, #10b981);
+    }
+
+    #camera-button:hover {
+      background: linear-gradient(135deg, #10b981, #059669);
+      transform: translateY(-1px);
+    }
+
+    .action-button:active {
+      transform: translateY(0);
+    }
+
+    .file-text {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-left: 0.5rem;
+    }
+
+    @media (max-width: 480px) {
+      .input-container {
+        border-radius: 20px;
+        padding: 0.375rem;
+        margin-bottom: 0.375rem;
+      }
+
+      #message-input {
+        padding: 0.625rem;
+        font-size: 0.9375rem;
+      }
+
+      #send-button {
+        padding: 0.625rem 1rem;
+        min-width: 70px;
+        font-size: 0.875rem;
+      }
+
+      .action-buttons {
+        padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 20px)) 1rem;
+      }
+
+      .action-button {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+        min-height: 44px;
+      }
     }
 
     .message p {
@@ -368,54 +431,6 @@
     .message.user td {
       border-color: rgba(255, 255, 255, 0.1);
     }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 0;
-        height: 100vh;
-        height: -webkit-fill-available;
-      }
-
-      #chat-container {
-        border-radius: 0;
-        padding: 0.75rem;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
-      }
-
-      #chat-box {
-        margin: 3.5rem 0 0.5rem 0;
-        padding: 0.75rem;
-      }
-
-      #chat-input {
-        padding: 0.625rem;
-        margin: 0;
-        border-radius: 12px 12px 0 0;
-      }
-
-      .input-container {
-        padding: 0.375rem;
-      }
-
-      .action-buttons {
-        padding: 0.75rem;
-        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 20px));
-        background: white;
-        margin: 0;
-        gap: 0.75rem;
-      }
-
-      #file-label,
-      #camera-button {
-        flex: 1;
-        padding: 0.75rem;
-        font-size: 0.875rem;
-        min-height: 44px; /* iOS 最小触摸区域 */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
   </style>
 </head>
 <body>
@@ -435,15 +450,27 @@
   <div id="chat-container">
     <button id="toggle-stream">Enable Stream Mode</button>
     <div id="chat-box"></div>
-    <div id="chat-input">
+    <div id="input-area">
       <div class="input-container">
-        <textarea id="message-input" rows="1" placeholder="Type your message..." oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"></textarea>
-        <button id="send-button" disabled>Send</button>
+        <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
+        <button id="send-button">Send</button>
       </div>
       <div class="action-buttons">
-        <label id="file-label" for="file-input">Upload File</label>
-        <input type="file" id="file-input">
-        <button id="camera-button">Take Photo</button>
+        <label for="file-input" id="file-label" class="action-button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 15V3M12 3L8 7M12 3L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L2.621 19.485C2.72915 19.9177 2.97882 20.3018 3.33033 20.5763C3.68184 20.8508 4.11501 20.9999 4.561 21H19.439C19.885 20.9999 20.3182 20.8508 20.6697 20.5763C21.0212 20.3018 21.2708 19.9177 21.379 19.485L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Upload
+        </label>
+        <input type="file" id="file-input" style="display: none;" multiple>
+        <button id="camera-button" class="action-button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 9C3 7.89543 3.89543 7 5 7H7.5C8.05228 7 8.5 6.55228 8.5 6C8.5 5.44772 8.94772 5 9.5 5H14.5C15.0523 5 15.5 5.44772 15.5 6C15.5 6.55228 15.9477 7 16.5 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Photo
+        </button>
       </div>
     </div>
   </div>

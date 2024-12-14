@@ -15,13 +15,15 @@
   <!-- Login interface -->
   <div id="auth-container">
     <h2>Welcome Back</h2>
-    <div class="input-group">
-      <input type="text" id="username" placeholder="Username" autocomplete="username">
-    </div>
-    <div class="input-group">
-      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
-    </div>
-    <button id="login-button">Login</button>
+    <form id="login-form">
+      <div class="input-group">
+        <input type="text" id="username" placeholder="Username" autocomplete="username">
+      </div>
+      <div class="input-group">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+      </div>
+      <button type="submit" id="login-button">Login</button>
+    </form>
   </div>
 
   <!-- Chat interface -->

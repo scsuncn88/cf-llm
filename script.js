@@ -3,11 +3,154 @@ const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login
 const API_UPLOAD_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/upload';
 const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/chat';
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded');
+// Global variables
+let apiKey = null;
+let isStreamMode = false;
+let currentStreamController = null;
 
-    // DOM elements
+// Initialize Marked.js
+marked.setOptions({
+    highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+            return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+    },
+    breaks: true,
+    gfm: true
+});
+
+// Helper function to append messages
+function appendMessage(content, className) {
+    const message = document.createElement('div');
+    message.className = `message ${className}`;
+    message.innerHTML = marked.parse(content);
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Highlight code blocks
+    message.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
+}
+
+// Handle regular chat
+async function handleRegularChat(message) {
+    const response = await fetch(API_CHAT_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+            type: 'text',
+            message: message,
+            userId: 'user123'
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to send message');
+    }
+
+    const data = await response.json();
+    appendMessage(data.response, 'assistant');
+}
+
+// Handle streaming chat
+async function handleStreamChat(message) {
+    if (currentStreamController) {
+        currentStreamController.abort();
+    }
+
+    currentStreamController = new AbortController();
+
+    try {
+        const response = await fetch(API_CHAT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                type: 'text',
+                message: message,
+                userId: 'user123',
+                stream: true
+            }),
+            signal: currentStreamController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to start stream');
+        }
+
+        // Create message container for streaming response
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message assistant';
+        chatBox.appendChild(messageElement);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let responseText = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            responseText += chunk;
+            messageElement.innerHTML = marked.parse(responseText);
+            
+            // Highlight code blocks
+            messageElement.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('Stream was cancelled');
+        } else {
+            throw error;
+        }
+    } finally {
+        currentStreamController = null;
+    }
+}
+
+// Message sending logic
+async function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message) return;
+
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    sendButton.disabled = true;
+
+    // Add user message to chat
+    appendMessage(message, 'user');
+
+    try {
+        if (isStreamMode) {
+            await handleStreamChat(message);
+        } else {
+            await handleRegularChat(message);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        appendMessage('Sorry, there was an error processing your message.', 'error');
+    } finally {
+        sendButton.disabled = false;
+    }
+}
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Script.js: DOM fully loaded');
+
+    // Get DOM elements
     const authContainer = document.getElementById('auth-container');
     const chatContainer = document.getElementById('chat-container');
     const loginButton = document.getElementById('login-button');
@@ -18,38 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const cameraButton = document.getElementById('camera-button');
 
-    // Debug log for DOM elements
-    console.log('Login button:', loginButton);
-    console.log('Auth container:', authContainer);
-    console.log('Chat container:', chatContainer);
-
-    // Global variables
-    let apiKey = null;
-    let isStreamMode = false;
-    let currentStreamController = null;
-
-    // Initialize Marked.js
-    marked.setOptions({
-        highlight: function(code, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        },
-        breaks: true,
-        gfm: true
-    });
+    console.log('Script.js: Got all DOM elements');
+    console.log('Script.js: Login button:', loginButton);
 
     // Login handler
     if (loginButton) {
-        console.log('Adding click event listener to login button');
-        loginButton.addEventListener('click', async () => {
-            console.log('Login button clicked');
+        loginButton.addEventListener('click', async function(e) {
+            e.preventDefault();
+            console.log('Script.js: Login button clicked');
+
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
 
-            console.log('Username length:', username.length);
-            console.log('Password length:', password.length);
+            console.log('Script.js: Username length:', username.length);
+            console.log('Script.js: Password length:', password.length);
 
             if (!username || !password) {
                 alert('Please enter both username and password.');
@@ -57,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                console.log('Sending login request...');
+                console.log('Script.js: Sending login request...');
                 const response = await fetch(API_LOGIN_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -65,25 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 const data = await response.json();
-                console.log('Login response:', data);
+                console.log('Script.js: Login response:', data);
 
                 if (response.ok && data.apiKey) {
-                    console.log('Login successful');
+                    console.log('Script.js: Login successful');
                     apiKey = data.apiKey;
                     authContainer.style.display = 'none';
                     chatContainer.style.display = 'flex';
                     sendButton.disabled = false;
                 } else {
-                    console.log('Login failed:', data.error);
+                    console.log('Script.js: Login failed:', data.error);
                     alert(data.error || 'Login failed.');
                 }
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('Script.js: Login error:', error);
                 alert('Unable to connect to the server.');
             }
         });
-    } else {
-        console.error('Login button not found in the DOM');
     }
 
     // Stream mode toggle
@@ -92,118 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isStreamMode = !isStreamMode;
             toggleStreamButton.textContent = isStreamMode ? 'Disable Stream Mode' : 'Enable Stream Mode';
         });
-    }
-
-    // Message sending logic
-    async function sendMessage() {
-        const message = messageInput.value.trim();
-        if (!message) return;
-
-        messageInput.value = '';
-        messageInput.style.height = 'auto';
-        sendButton.disabled = true;
-
-        // Add user message to chat
-        appendMessage(message, 'user');
-
-        try {
-            if (isStreamMode) {
-                await handleStreamChat(message);
-            } else {
-                await handleRegularChat(message);
-            }
-        } catch (error) {
-            console.error('Error sending message:', error);
-            appendMessage('Sorry, there was an error processing your message.', 'error');
-        } finally {
-            sendButton.disabled = false;
-        }
-    }
-
-    // Handle regular chat
-    async function handleRegularChat(message) {
-        const response = await fetch(API_CHAT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                type: 'text',
-                message: message,
-                userId: 'user123'
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send message');
-        }
-
-        const data = await response.json();
-        appendMessage(data.response, 'assistant');
-    }
-
-    // Handle streaming chat
-    async function handleStreamChat(message) {
-        if (currentStreamController) {
-            currentStreamController.abort();
-        }
-
-        currentStreamController = new AbortController();
-
-        try {
-            const response = await fetch(API_CHAT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    type: 'text',
-                    message: message,
-                    userId: 'user123',
-                    stream: true
-                }),
-                signal: currentStreamController.signal
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to start stream');
-            }
-
-            // Create message container for streaming response
-            const messageElement = document.createElement('div');
-            messageElement.className = 'message assistant';
-            chatBox.appendChild(messageElement);
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let responseText = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                responseText += chunk;
-                messageElement.innerHTML = marked.parse(responseText);
-                
-                // Highlight code blocks
-                messageElement.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightBlock(block);
-                });
-
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('Stream was cancelled');
-            } else {
-                throw error;
-            }
-        } finally {
-            currentStreamController = null;
-        }
     }
 
     // File upload handler
@@ -277,19 +288,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Send button handler
     if (sendButton) {
         sendButton.addEventListener('click', sendMessage);
-    }
-
-    // Helper function to append messages
-    function appendMessage(content, className) {
-        const message = document.createElement('div');
-        message.className = `message ${className}`;
-        message.innerHTML = marked.parse(content);
-        chatBox.appendChild(message);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        // Highlight code blocks
-        message.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightBlock(block);
-        });
     }
 });

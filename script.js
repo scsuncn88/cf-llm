@@ -60,21 +60,30 @@ function appendMessage(content, className) {
 function initLogin() {
     debug('Initializing login form');
     const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
+    
     debug(`Login form element: ${loginForm ? 'found' : 'not found'}`);
+    debug(`Login button element: ${loginButton ? 'found' : 'not found'}`);
 
-    if (loginForm) {
-        debug('Adding submit event listener to login form');
-        loginForm.addEventListener('submit', handleLogin);
-        
-        // Also add click event to the button as a backup
-        const loginButton = document.getElementById('login-button');
-        if (loginButton) {
-            debug('Adding click event listener to login button');
-            loginButton.addEventListener('click', handleLogin);
-        }
-    } else {
-        console.error('Login form not found');
+    if (!loginForm || !loginButton) {
+        console.error('Login form or button not found');
+        return;
     }
+
+    // Remove any existing event listeners
+    loginForm.removeEventListener('submit', handleLogin);
+    loginButton.removeEventListener('click', handleLogin);
+
+    // Add event listeners
+    loginForm.addEventListener('submit', handleLogin);
+    loginButton.addEventListener('click', function(e) {
+        debug('Login button clicked');
+        if (!e.submitter) {  // If not triggered by form submit
+            handleLogin(e);
+        }
+    });
+
+    debug('Event listeners added successfully');
 }
 
 // Handle login submission
@@ -355,10 +364,20 @@ async function handleStreamChat(message) {
     }
 }
 
-// Initialize everything when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Script.js: DOMContentLoaded event fired');
+// Initialize everything
+function init() {
+    debug('Initializing application');
     initMarked();
     initLogin();
     initChat();
-});
+    debug('Initialization complete');
+}
+
+// Set up initialization
+if (document.readyState === 'loading') {
+    debug('Document still loading, adding DOMContentLoaded listener');
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    debug('Document already loaded, initializing now');
+    init();
+}

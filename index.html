@@ -20,19 +20,19 @@
   <!-- Login interface -->
   <div id="auth-container">
     <h2>Welcome Back</h2>
-    <form id="login-form" onsubmit="return false;">
+    <form id="login-form">
       <div class="input-group">
         <input type="text" id="username" placeholder="Username" autocomplete="username">
       </div>
       <div class="input-group">
         <input type="password" id="password" placeholder="Password" autocomplete="current-password">
       </div>
-      <button type="submit" id="login-button">Login</button>
+      <button type="button" id="login-button" onclick="console.log('Button clicked directly')">Login</button>
     </form>
   </div>
 
   <!-- Chat interface -->
-  <div id="chat-container">
+  <div id="chat-container" style="display: none;">
     <button id="toggle-stream">Enable Stream Mode</button>
     <div id="chat-box"></div>
     <div id="input-container">
@@ -60,12 +60,61 @@
     </div>
   </div>
 
-  <!-- Application Script -->
+  <!-- Debug Script -->
   <script>
     // Debug function for script loading
     function debug(message) {
       console.log(`[LOADER] ${message}`);
     }
+
+    // Inline debug for form
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('login-form');
+      const loginButton = document.getElementById('login-button');
+      
+      if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+          console.log('[INLINE] Form submitted');
+          e.preventDefault();
+        });
+      }
+      
+      if (loginButton) {
+        loginButton.addEventListener('click', (e) => {
+          console.log('[INLINE] Button clicked through listener');
+          e.preventDefault();
+          const username = document.getElementById('username').value;
+          const password = document.getElementById('password').value;
+          console.log('[INLINE] Username:', username);
+          console.log('[INLINE] Password length:', password.length);
+          
+          // Try direct fetch
+          fetch('https://floral-hill-cdd0.yamasun001-85b.workers.dev/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              username: username,
+              password: password
+            })
+          })
+          .then(response => {
+            console.log('[INLINE] Response status:', response.status);
+            return response.json();
+          })
+          .then(data => {
+            console.log('[INLINE] Response data:', data);
+            if (data.apiKey) {
+              document.getElementById('auth-container').style.display = 'none';
+              document.getElementById('chat-container').style.display = 'flex';
+            }
+          })
+          .catch(error => console.error('[INLINE] Error:', error));
+        });
+      }
+    });
 
     // Check if libraries are loaded
     function checkLibraries() {
@@ -99,7 +148,6 @@
         loadAppScript();
       } else {
         debug('Waiting for libraries to load...');
-        // Wait for window load event as backup
         window.addEventListener('load', () => {
           debug('Window loaded');
           if (checkLibraries()) {

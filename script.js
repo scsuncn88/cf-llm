@@ -134,6 +134,8 @@ async function handleLogin(e) {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'flex';
             document.getElementById('send-button').disabled = false;
+            initChat(); // Initialize chat after successful login
+            loadChatHistory(); // Load chat history after successful login
         } else {
             debug(`Login failed: ${data.error || 'Unknown error'}`);
             alert(data.error || 'Login failed.');
@@ -145,118 +147,67 @@ async function handleLogin(e) {
     }
 }
 
-// Initialize chat features
+// Initialize chat interface
 function initChat() {
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const toggleStreamButton = document.getElementById('toggle-stream');
-    const fileInput = document.getElementById('file-input');
-    const cameraButton = document.getElementById('camera-button');
-
-    // Stream mode toggle
-    if (toggleStreamButton) {
-        toggleStreamButton.addEventListener('click', () => {
-            isStreamMode = !isStreamMode;
-            toggleStreamButton.textContent = isStreamMode ? 'Disable Stream Mode' : 'Enable Stream Mode';
-        });
-    }
-
-    // File upload handler
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileUpload);
-    }
-
-    // Camera button handler
-    if (cameraButton) {
-        cameraButton.addEventListener('click', handleCamera);
-    }
-
-    // Message input handlers
-    if (messageInput) {
-        // Send on Enter (but allow Shift+Enter for new line)
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        // Auto-resize textarea
-        messageInput.addEventListener('input', () => {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = messageInput.scrollHeight + 'px';
-            if (sendButton) {
-                sendButton.disabled = !messageInput.value.trim();
-            }
-        });
-    }
-
-    // Send button handler
-    if (sendButton) {
-        sendButton.addEventListener('click', sendMessage);
-    }
-}
-
-// Handle file upload
-async function handleFileUpload() {
-    const fileInput = document.getElementById('file-input');
-    const files = fileInput.files;
-    if (!files.length) return;
-
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]);
-    }
-
-    try {
-        const response = await fetch(API_UPLOAD_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error('Upload failed');
-        }
-
-        const data = await response.json();
-        appendMessage(`Files uploaded successfully: ${data.fileNames.join(', ')}`, 'system');
-    } catch (error) {
-        console.error('Upload error:', error);
-        appendMessage('Failed to upload files.', 'error');
-    }
-
-    // Clear file input
-    fileInput.value = '';
-}
-
-// Handle camera
-async function handleCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        // Create video preview and capture button
-        // ... (implement camera functionality)
-    } catch (error) {
-        console.error('Camera error:', error);
-        appendMessage('Failed to access camera.', 'error');
-    }
-}
-
-// Message sending logic
-async function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
+    debug('Initializing chat interface');
     
-    const message = messageInput.value.trim();
-    if (!message) return;
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const fileInput = document.getElementById('file-input');
+    const toggleStreamButton = document.getElementById('toggle-stream');
+    
+    // Enable send button when message input has content
+    messageInput.addEventListener('input', () => {
+        sendButton.disabled = !messageInput.value.trim();
+    });
 
-    messageInput.value = '';
-    messageInput.style.height = 'auto';
-    sendButton.disabled = true;
+    // Handle message submission
+    sendButton.addEventListener('click', () => {
+        const message = messageInput.value.trim();
+        if (message) {
+            handleMessage(message);
+            messageInput.value = '';
+            sendButton.disabled = true;
+        }
+    });
 
-    // Add user message to chat
+    // Handle enter key
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendButton.click();
+        }
+    });
+
+    // Handle file upload
+    fileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+            await handleFileUpload(files);
+            fileInput.value = ''; // Reset file input
+        }
+    });
+
+    // Handle stream mode toggle
+    toggleStreamButton.addEventListener('click', () => {
+        isStreamMode = !isStreamMode;
+        toggleStreamButton.textContent = isStreamMode ? 'Disable Stream Mode' : 'Enable Stream Mode';
+    });
+
+    debug('Chat interface initialized');
+}
+
+// Handle message sending
+async function handleMessage(message) {
+    debug('Handling message:', message);
+    
+    if (!apiKey) {
+        debug('No API key available');
+        alert('Please log in first.');
+        return;
+    }
+
+    // Display user message
     appendMessage(message, 'user');
 
     try {
@@ -266,43 +217,53 @@ async function sendMessage() {
             await handleRegularChat(message);
         }
     } catch (error) {
-        console.error('Error sending message:', error);
-        appendMessage('Sorry, there was an error processing your message.', 'error');
-    } finally {
-        sendButton.disabled = false;
+        console.error('Chat error:', error);
+        appendMessage('Error: Unable to process your message.', 'error');
     }
 }
 
 // Handle regular chat
 async function handleRegularChat(message) {
-    const response = await fetch(API_CHAT_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-            type: 'text',
-            message: message,
-            userId: 'user123'
-        })
-    });
+    debug('Sending regular chat message');
+    
+    try {
+        const response = await fetch(API_CHAT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({ message })
+        });
 
-    if (!response.ok) {
-        throw new Error('Failed to send message');
+        const data = await response.json();
+        
+        if (response.ok && data.response) {
+            appendMessage(data.response, 'assistant');
+        } else {
+            throw new Error(data.error || 'Failed to get response');
+        }
+    } catch (error) {
+        console.error('Regular chat error:', error);
+        appendMessage('Error: ' + error.message, 'error');
     }
-
-    const data = await response.json();
-    appendMessage(data.response, 'assistant');
 }
 
 // Handle streaming chat
 async function handleStreamChat(message) {
-    if (currentStreamController) {
-        currentStreamController.abort();
+    debug('Starting streaming chat');
+    
+    if (!apiKey) {
+        debug('No API key available');
+        alert('Please log in first.');
+        return;
     }
 
-    currentStreamController = new AbortController();
+    // Create a placeholder message for streaming response
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message assistant';
+    chatBox.appendChild(messageElement);
 
     try {
         const response = await fetch(API_CHAT_URL, {
@@ -311,25 +272,14 @@ async function handleStreamChat(message) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
             },
-            body: JSON.stringify({
-                type: 'text',
-                message: message,
-                userId: 'user123',
-                stream: true
-            }),
-            signal: currentStreamController.signal
+            body: JSON.stringify({ 
+                message,
+                stream: true 
+            })
         });
 
         if (!response.ok) {
-            throw new Error('Failed to start stream');
-        }
-
-        // Create message container for streaming response
-        const messageElement = document.createElement('div');
-        messageElement.className = 'message assistant';
-        const chatBox = document.getElementById('chat-box');
-        if (chatBox) {
-            chatBox.appendChild(messageElement);
+            throw new Error('Stream request failed');
         }
 
         const reader = response.body.getReader();
@@ -342,6 +292,8 @@ async function handleStreamChat(message) {
 
             const chunk = decoder.decode(value, { stream: true });
             responseText += chunk;
+            
+            // Update message content
             messageElement.innerHTML = marked.parse(responseText);
             
             // Highlight code blocks
@@ -349,18 +301,83 @@ async function handleStreamChat(message) {
                 hljs.highlightBlock(block);
             });
 
-            if (chatBox) {
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
     } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('Stream was cancelled');
+        console.error('Streaming chat error:', error);
+        messageElement.innerHTML = marked.parse('Error: ' + error.message);
+        messageElement.classList.add('error');
+    }
+}
+
+// Handle file upload
+async function handleFileUpload(files) {
+    debug('Handling file upload');
+    
+    if (!apiKey) {
+        debug('No API key available');
+        alert('Please log in first.');
+        return;
+    }
+
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+
+    try {
+        const response = await fetch(API_UPLOAD_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: formData
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.message) {
+            appendMessage(`Files uploaded: ${files.map(f => f.name).join(', ')}`, 'system');
+            appendMessage(data.message, 'assistant');
         } else {
-            throw error;
+            throw new Error(data.error || 'Failed to upload files');
         }
-    } finally {
-        currentStreamController = null;
+    } catch (error) {
+        console.error('File upload error:', error);
+        appendMessage('Error uploading files: ' + error.message, 'error');
+    }
+}
+
+// Load chat history
+async function loadChatHistory() {
+    debug('Loading chat history');
+    
+    if (!apiKey) {
+        debug('No API key available');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_CHAT_URL}/history`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load chat history');
+        }
+
+        const data = await response.json();
+        
+        if (data.messages && Array.isArray(data.messages)) {
+            data.messages.forEach(msg => {
+                appendMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant');
+            });
+        }
+    } catch (error) {
+        console.error('History loading error:', error);
+        appendMessage('Error loading chat history: ' + error.message, 'error');
     }
 }
 
@@ -369,7 +386,6 @@ function init() {
     debug('Initializing application');
     initMarked();
     initLogin();
-    initChat();
     debug('Initialization complete');
 }
 

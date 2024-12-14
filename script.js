@@ -3,9 +3,6 @@ function debug(message) {
     console.log(`[DEBUG] ${message}`);
 }
 
-// Immediate debug logs
-debug('Script started');
-
 // API endpoints
 const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login';
 const API_UPLOAD_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/upload';
@@ -15,46 +12,6 @@ const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/chat';
 let apiKey = null;
 let isStreamMode = false;
 let currentStreamController = null;
-
-// Initialize Marked.js after DOM is loaded
-function initMarked() {
-    debug('Initializing Marked.js');
-    if (typeof marked !== 'undefined') {
-        marked.setOptions({
-            highlight: function(code, lang) {
-                if (lang && hljs.getLanguage(lang)) {
-                    return hljs.highlight(code, { language: lang }).value;
-                }
-                return hljs.highlightAuto(code).value;
-            },
-            breaks: true,
-            gfm: true
-        });
-        debug('Marked.js initialized successfully');
-    } else {
-        debug('Warning: marked is not defined');
-    }
-}
-
-// Helper function to append messages
-function appendMessage(content, className) {
-    const chatBox = document.getElementById('chat-box');
-    if (!chatBox) {
-        debug('Warning: chat-box element not found');
-        return;
-    }
-
-    const message = document.createElement('div');
-    message.className = `message ${className}`;
-    message.innerHTML = marked.parse(content);
-    chatBox.appendChild(message);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // Highlight code blocks
-    message.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightBlock(block);
-    });
-}
 
 // Initialize login form
 function initLogin() {
@@ -93,9 +50,10 @@ async function handleLogin(e) {
     
     const username = document.getElementById('username');
     const password = document.getElementById('password');
+    const loginButton = document.getElementById('login-button');
     
-    if (!username || !password) {
-        debug('Username or password input not found');
+    if (!username || !password || !loginButton) {
+        debug('Form elements not found');
         return;
     }
 
@@ -109,6 +67,8 @@ async function handleLogin(e) {
         alert('Please enter both username and password.');
         return;
     }
+
+    loginButton.disabled = true;
 
     try {
         debug('Sending login request...');
@@ -139,12 +99,34 @@ async function handleLogin(e) {
         } else {
             debug(`Login failed: ${data.error || 'Unknown error'}`);
             alert(data.error || 'Login failed.');
+            loginButton.disabled = false;
         }
     } catch (error) {
         console.error('Login error:', error);
         debug(`Login error: ${error.message}`);
         alert('Unable to connect to the server.');
+        loginButton.disabled = false;
     }
+}
+
+// Helper function to append messages
+function appendMessage(content, className) {
+    const chatBox = document.getElementById('chat-box');
+    if (!chatBox) {
+        debug('Warning: chat-box element not found');
+        return;
+    }
+
+    const message = document.createElement('div');
+    message.className = `message ${className}`;
+    message.innerHTML = marked.parse(content);
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Highlight code blocks
+    message.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
 }
 
 // Initialize chat interface
@@ -382,18 +364,13 @@ async function loadChatHistory() {
 }
 
 // Initialize everything
-function init() {
-    debug('Initializing application');
-    initMarked();
-    initLogin();
-    debug('Initialization complete');
-}
-
-// Set up initialization
-if (document.readyState === 'loading') {
-    debug('Document still loading, adding DOMContentLoaded listener');
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    debug('Document already loaded, initializing now');
-    init();
-}
+document.addEventListener('DOMContentLoaded', function() {
+    debug('DOM Content Loaded - Starting initialization');
+    try {
+        initLogin();
+        debug('Initialization complete');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        debug(`Initialization failed: ${error.message}`);
+    }
+});

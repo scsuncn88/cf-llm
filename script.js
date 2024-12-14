@@ -1,3 +1,6 @@
+// Immediate debug logs
+console.log('Script.js: Script started');
+
 // API endpoints
 const API_LOGIN_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/login';
 const API_UPLOAD_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/upload';
@@ -7,6 +10,11 @@ const API_CHAT_URL = 'https://floral-hill-cdd0.yamasun001-85b.workers.dev/chat';
 let apiKey = null;
 let isStreamMode = false;
 let currentStreamController = null;
+
+// Debug: Log when the script is loaded
+window.addEventListener('load', () => {
+    console.log('Script.js: Window loaded');
+});
 
 // Initialize Marked.js
 marked.setOptions({
@@ -146,29 +154,17 @@ async function sendMessage() {
     }
 }
 
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Script.js: DOM fully loaded');
-
-    // Get DOM elements
-    const authContainer = document.getElementById('auth-container');
-    const chatContainer = document.getElementById('chat-container');
+// Initialize login form immediately
+const initLogin = () => {
+    console.log('Script.js: Initializing login form');
     const loginForm = document.getElementById('login-form');
-    const sendButton = document.getElementById('send-button');
-    const toggleStreamButton = document.getElementById('toggle-stream');
-    const chatBox = document.getElementById('chat-box');
-    const messageInput = document.getElementById('message-input');
-    const fileInput = document.getElementById('file-input');
-    const cameraButton = document.getElementById('camera-button');
+    console.log('Script.js: Login form element:', loginForm);
 
-    console.log('Script.js: Got all DOM elements');
-    console.log('Script.js: Login form:', loginForm);
-
-    // Login handler
     if (loginForm) {
+        console.log('Script.js: Adding submit event listener');
         loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault(); // 阻止表单默认提交
-            console.log('Script.js: Login form submitted');
+            e.preventDefault();
+            console.log('Script.js: Form submitted');
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -196,9 +192,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok && data.apiKey) {
                     console.log('Script.js: Login successful');
                     apiKey = data.apiKey;
-                    authContainer.style.display = 'none';
-                    chatContainer.style.display = 'flex';
-                    sendButton.disabled = false;
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('chat-container').style.display = 'flex';
+                    document.getElementById('send-button').disabled = false;
                 } else {
                     console.log('Script.js: Login failed:', data.error);
                     alert(data.error || 'Login failed.');
@@ -209,8 +205,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     } else {
-        console.error('Script.js: Login form not found in the DOM');
+        console.error('Script.js: Login form not found');
     }
+};
+
+// Try to initialize immediately
+console.log('Script.js: Trying immediate initialization');
+initLogin();
+
+// Also try on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Script.js: DOMContentLoaded event fired');
+    initLogin();
+
+    console.log('Script.js: DOM fully loaded');
+
+    // Get DOM elements
+    const authContainer = document.getElementById('auth-container');
+    const chatContainer = document.getElementById('chat-container');
+    const loginForm = document.getElementById('login-form');
+    const sendButton = document.getElementById('send-button');
+    const toggleStreamButton = document.getElementById('toggle-stream');
+    const chatBox = document.getElementById('chat-box');
+    const messageInput = document.getElementById('message-input');
+    const fileInput = document.getElementById('file-input');
+    const cameraButton = document.getElementById('camera-button');
+
+    console.log('Script.js: Got all DOM elements');
+    console.log('Script.js: Login form:', loginForm);
 
     // Stream mode toggle
     if (toggleStreamButton) {

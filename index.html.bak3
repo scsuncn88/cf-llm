@@ -10,20 +10,12 @@
   
   <!-- Application Styles -->
   <link rel="stylesheet" href="styles.css">
-  
-  <!-- External Libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
-  
-  <!-- Application Script -->
-  <script src="script.js"></script>
 </head>
 <body>
   <!-- Login interface -->
   <div id="auth-container">
     <h2>Welcome Back</h2>
-    <form id="login-form" onsubmit="return false;">
+    <form id="login-form">
       <div class="input-group">
         <input type="text" id="username" placeholder="Username" autocomplete="username">
       </div>
@@ -62,5 +54,29 @@
       </button>
     </div>
   </div>
+
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  
+  <!-- Application Script -->
+  <script src="script.js" defer></script>
+
+  <!-- Debug Script -->
+  <script>
+    // Add debug logs
+    console.log('Debug mode enabled');
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM fully loaded');
+      const loginButton = document.getElementById('login-button');
+      console.log('Login button element:', loginButton);
+      if (loginButton) {
+        loginButton.addEventListener('click', () => {
+          console.log('Login button clicked directly');
+        });
+      }
+    });
+  </script>
 </body>
 </html>

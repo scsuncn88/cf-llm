@@ -88,9 +88,12 @@ sendButton.addEventListener('click', async () => {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({ 
-        type: isStreamMode ? 'stream' : 'chat', 
-        message, 
-        userId: 'user123' 
+        messages: [
+          { role: 'system', content: 'You are a friendly assistant' },
+          { role: 'user', content: message }
+        ],
+        stream: isStreamMode,
+        userId: 'user123'
       })
     });
 
@@ -104,25 +107,34 @@ sendButton.addEventListener('click', async () => {
       streamContainer.className = 'message ai';
       chatBox.appendChild(streamContainer);
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let streamText = '';
-
       try {
+        // 获取 ReadableStream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let streamText = '';
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
+          // 解码新的数据块
           const chunk = decoder.decode(value, { stream: true });
           const lines = chunk.split('\n');
           
           for (const line of lines) {
-            if (line.trim() === '') continue;
+            if (!line.trim()) continue;
             
             if (line.startsWith('data: ')) {
               try {
-                const data = JSON.parse(line.slice(6));
+                // 解析 SSE 数据
+                const jsonStr = line.slice(6); // 移除 "data: " 前缀
+                if (jsonStr === '[DONE]') {
+                  break;
+                }
+
+                const data = JSON.parse(jsonStr);
                 if (data.response) {
+                  // 累积文本并更新显示
                   streamText += data.response;
                   streamContainer.innerHTML = marked.parse(streamText);
                   
@@ -142,7 +154,7 @@ sendButton.addEventListener('click', async () => {
         }
       } catch (error) {
         console.error('Streaming error:', error);
-        streamContainer.innerHTML = 'Streaming error occurred';
+        streamContainer.innerHTML = marked.parse('Streaming error occurred');
       }
     } else {
       const data = await response.json();
@@ -292,3 +304,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+function showLoadingIndicator(container) {
+  const loading = document.createElement('div');
+  loading.className = 'loading';
+  loading.innerHTML = `
+    <span></span>
+    <span></span>
+    <span></span>
+  `;
+  container.appendChild(loading);
+  return loading;
+}
+
+// 在开始流式传输前添加加载指示器
+const loadingIndicator = showLoadingIndicator(streamContainer);
+// 在收到第一个响应后移除
+loadingIndicator.remove();

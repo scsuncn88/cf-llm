@@ -54,8 +54,26 @@ toggleStreamButton.addEventListener('click', () => {
   toggleStreamButton.classList.toggle('active', isStreamMode);
 });
 
+// 添加触觉反馈
+function triggerHapticFeedback(type = 'light') {
+  if ('vibrate' in navigator) {
+    switch(type) {
+      case 'light':
+        navigator.vibrate(10);
+        break;
+      case 'medium':
+        navigator.vibrate(20);
+        break;
+      case 'heavy':
+        navigator.vibrate([30, 50, 30]);
+        break;
+    }
+  }
+}
+
 // Send message logic
 sendButton.addEventListener('click', async () => {
+  triggerHapticFeedback('medium');
   const message = messageInput.value.trim();
   if (!message) return;
 

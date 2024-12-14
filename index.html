@@ -11,6 +11,7 @@
   <!-- Application Styles -->
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap">
   
   <!-- External Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -22,17 +23,17 @@
     <h2>Welcome Back</h2>
     <form id="login-form">
       <div class="input-group">
-        <input type="text" id="username" placeholder="Username" autocomplete="username">
+        <input type="text" id="username" placeholder="Username" autocomplete="username" required>
       </div>
       <div class="input-group">
-        <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" required>
       </div>
-      <button type="button" id="login-button" onclick="console.log('Button clicked directly')">Login</button>
+      <button type="button" id="login-button">Login</button>
     </form>
   </div>
 
   <!-- Chat interface -->
-  <div id="chat-container" style="display: none;">
+  <div id="chat-container">
     <button id="toggle-stream">Enable Stream Mode</button>
     <div id="chat-box"></div>
     <div id="input-container">
@@ -51,7 +52,7 @@
       </label>
       <input type="file" id="file-input" multiple style="display: none">
       <textarea id="message-input" placeholder="Type your message..." rows="1"></textarea>
-      <button id="send-button" disabled>
+      <button id="send-button">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="22" y1="2" x2="11" y2="13"></line>
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
@@ -109,6 +110,7 @@
             if (data.apiKey) {
               document.getElementById('auth-container').style.display = 'none';
               document.getElementById('chat-container').style.display = 'flex';
+              document.getElementById('send-button').disabled = false;
             }
           })
           .catch(error => console.error('[INLINE] Error:', error));

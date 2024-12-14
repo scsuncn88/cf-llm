@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            console.log('Sending login request...');
             const response = await fetch(API_LOGIN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -39,21 +38,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const data = await response.json();
-            console.log('Response:', data);
-
             if (response.ok && data.apiKey) {
-                console.log('Login successful');
                 apiKey = data.apiKey;
                 authContainer.style.display = 'none';
                 chatContainer.style.display = 'flex';
                 sendButton.disabled = false;
             } else {
-                console.log('Login failed:', data.error);
                 alert(data.error || 'Login failed.');
             }
         } catch (error) {
-            console.error('Login error:', error);
             alert('Unable to connect to the server.');
+            console.error('Login error:', error);
         }
     });
 });

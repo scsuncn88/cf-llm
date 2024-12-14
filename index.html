@@ -7,17 +7,30 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Chat with AI</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <link rel="stylesheet" href="styles.css"> <!-- 外部样式表 -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="auth-container" class="container mt-5">
-    <h2 class="text-center">Login</h2>
-    <input type="text" id="username" class="form-control mb-3" placeholder="Username" autocomplete="username" required aria-label="Username">
-    <input type="password" id="password" class="form-control mb-3" placeholder="Password" autocomplete="current-password" required aria-label="Password">
-    <button id="login-button" class="btn btn-primary btn-block">Login</button>
+  <!-- Login interface -->
+  <div id="auth-container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" autocomplete="username">
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+    <button id="login-button">Login</button>
   </div>
 
-  <script src="script.js"></script> <!-- 外部 JavaScript 文件 -->
+  <!-- Chat interface -->
+  <div id="chat-container">
+    <button id="toggle-stream">Enable Stream Mode</button>
+    <div id="chat-box"></div>
+    <div id="chat-input">
+      <textarea id="message-input" rows="1" placeholder="Type your message here..."></textarea>
+      <button id="send-button" disabled>Send</button>
+    </div>
+    <label id="file-label" for="file-input">Upload File</label>
+    <input type="file" id="file-input">
+    <button id="camera-button">Take Photo</button>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>

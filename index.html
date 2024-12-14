@@ -7,14 +7,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Chat with AI</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="stylesheet" href="styles.css"> <!-- 外部样式表 -->
 </head>
 <body>
-  <!-- Login interface -->
-  <div id="auth-container">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username" autocomplete="username" required aria-label="Username">
-    <button id="login-button">Login</button>
+  <div id="auth-container" class="container mt-5">
+    <h2 class="text-center">Login</h2>
+    <input type="text" id="username" class="form-control mb-3" placeholder="Username" autocomplete="username" required aria-label="Username">
+    <button id="login-button" class="btn btn-primary btn-block">Login</button>
   </div>
 
   <script src="script.js"></script> <!-- 外部 JavaScript 文件 -->

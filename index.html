@@ -7,6 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>Chat with AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/github.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/lib/highlight.min.js"></script>
   <style>
     /* Global styles */
     * {
@@ -209,7 +212,7 @@
       background: white;
       border-radius: 16px;
       padding: 0.75rem;
-      margin-top: auto;
+      margin: 0.5rem 0;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
       position: relative;
       z-index: 2;
@@ -264,21 +267,102 @@
     .action-buttons {
       display: flex;
       gap: 0.75rem;
-      padding: 0.75rem 0;
+      padding: 0.5rem 0;
+      margin-top: 0.5rem;
     }
 
     #file-label,
     #camera-button {
-      flex: 1;
-      text-align: center;
       padding: 0.75rem;
       border-radius: 12px;
       font-size: 0.875rem;
       font-weight: 500;
       transition: all 0.2s ease;
+      background: #4299e1;
+      color: white;
+      cursor: pointer;
+      display: inline-block;
+      text-align: center;
+      line-height: 1;
     }
 
-    /* Responsive adjustments */
+    #camera-button {
+      background: #48bb78;
+    }
+
+    .message p {
+      margin: 0 0 1em 0;
+    }
+
+    .message p:last-child {
+      margin-bottom: 0;
+    }
+
+    .message pre {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.5em;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 0.5em 0;
+    }
+
+    .message code {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9em;
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+    }
+
+    .message:not(.user) code {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .message.user code {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .message ul, .message ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
+
+    .message blockquote {
+      border-left: 3px solid;
+      margin: 0.5em 0;
+      padding-left: 1em;
+    }
+
+    .message.user blockquote {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .message:not(.user) blockquote {
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .message img {
+      max-width: 100%;
+      border-radius: 4px;
+      margin: 0.5em 0;
+    }
+
+    .message table {
+      border-collapse: collapse;
+      margin: 0.5em 0;
+      width: 100%;
+    }
+
+    .message th,
+    .message td {
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 0.4em 0.6em;
+    }
+
+    .message.user th,
+    .message.user td {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
     @media (max-width: 480px) {
       body {
         padding: 0;
@@ -302,9 +386,8 @@
       }
 
       #chat-input {
-        border-radius: 12px;
         padding: 0.625rem;
-        margin: 0 0 0.5rem 0;
+        margin: 0.25rem 0;
       }
 
       .input-container {
@@ -321,14 +404,15 @@
       }
 
       .action-buttons {
-        padding: 0.5rem 0;
-        gap: 0.5rem;
+        padding: 0.375rem 0;
+        margin-top: 0.375rem;
       }
 
       #file-label,
       #camera-button {
         padding: 0.625rem;
         font-size: 0.8125rem;
+        line-height: 1;
       }
     }
   </style>
@@ -546,12 +630,30 @@
       }
     }
     
+    // 初始化 marked 配置
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: true,
+      gfm: true
+    });
+
     function appendMessage(content, className) {
       const message = document.createElement('div');
-      message.textContent = content;
       message.className = `message ${className}`;
+      // 使用 marked 解析 Markdown
+      message.innerHTML = marked.parse(content);
       chatBox.appendChild(message);
       chatBox.scrollTop = chatBox.scrollHeight;
+      
+      // 高亮代码块
+      message.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+      });
     }
   </script>
 </body>

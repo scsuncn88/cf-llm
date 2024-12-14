@@ -61,25 +61,22 @@ function initLogin() {
     debug('Initializing login form');
     const loginForm = document.getElementById('login-form');
     
-    debug(`Login form element: ${loginForm ? 'found' : 'not found'}`);
-
     if (!loginForm) {
-        console.error('Login form not found');
+        debug('Login form not found');
         return;
     }
 
-    // Remove any existing event listeners
-    loginForm.removeEventListener('submit', handleLogin);
+    loginForm.addEventListener('submit', function(e) {
+        debug('Form submit event triggered');
+        handleLogin(e);
+    });
 
-    // Add event listener for form submission
-    loginForm.addEventListener('submit', handleLogin);
-
-    debug('Event listeners added successfully');
+    debug('Login form initialized');
 }
 
 // Handle login submission
 async function handleLogin(e) {
-    debug('Login event triggered');
+    debug('Login handler called');
     e.preventDefault();
     
     const username = document.getElementById('username');
@@ -94,19 +91,17 @@ async function handleLogin(e) {
     const usernameValue = username.value.trim();
     const passwordValue = password.value.trim();
 
-    debug(`Username length: ${usernameValue.length}`);
-    debug(`Password length: ${passwordValue.length}`);
+    debug('Form values retrieved');
 
     if (!usernameValue || !passwordValue) {
         alert('Please enter both username and password.');
         return;
     }
 
-    // Disable login button during request
     loginButton.disabled = true;
+    debug('Attempting login...');
 
     try {
-        debug('Sending login request...');
         const response = await fetch(API_LOGIN_URL, {
             method: 'POST',
             headers: { 
@@ -119,27 +114,24 @@ async function handleLogin(e) {
             })
         });
 
-        debug(`Response status: ${response.status}`);
+        debug(`Login response status: ${response.status}`);
         const data = await response.json();
-        debug(`Login response: ${JSON.stringify(data)}`);
-
+        
         if (response.ok && data.apiKey) {
             debug('Login successful');
             apiKey = data.apiKey;
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'flex';
-            document.getElementById('send-button').disabled = false;
             initChat(); // Initialize chat after successful login
             loadChatHistory(); // Load chat history after successful login
         } else {
-            debug(`Login failed: ${data.error || 'Unknown error'}`);
-            alert(data.error || 'Login failed.');
+            debug('Login failed');
+            alert(data.error || 'Login failed');
             loginButton.disabled = false;
         }
     } catch (error) {
-        console.error('Login error:', error);
         debug(`Login error: ${error.message}`);
-        alert('Unable to connect to the server.');
+        alert('Unable to connect to the server');
         loginButton.disabled = false;
     }
 }
@@ -378,19 +370,14 @@ async function loadChatHistory() {
     }
 }
 
-// Initialize everything
-function init() {
-    debug('Initializing application');
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    debug('DOM Content Loaded');
     initMarked();
     initLogin();
-    debug('Initialization complete');
-}
+});
 
-// Set up initialization
-if (document.readyState === 'loading') {
-    debug('Document still loading, adding DOMContentLoaded listener');
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    debug('Document already loaded, initializing now');
-    init();
-}
+// Additional initialization when window is fully loaded
+window.addEventListener('load', function() {
+    debug('Window Loaded');
+});

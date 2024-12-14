@@ -60,48 +60,58 @@ function appendMessage(content, className) {
 function initLogin() {
     debug('Initializing login form');
     const loginForm = document.getElementById('login-form');
+    const loginButton = document.getElementById('login-button');
     
-    if (!loginForm) {
-        debug('Login form not found');
+    debug(`Login form element: ${loginForm ? 'found' : 'not found'}`);
+    debug(`Login button element: ${loginButton ? 'found' : 'not found'}`);
+
+    if (!loginForm || !loginButton) {
+        console.error('Login form or button not found');
         return;
     }
 
-    loginForm.addEventListener('submit', function(e) {
-        debug('Form submit event triggered');
-        handleLogin(e);
+    // Remove any existing event listeners
+    loginForm.removeEventListener('submit', handleLogin);
+    loginButton.removeEventListener('click', handleLogin);
+
+    // Add event listeners
+    loginForm.addEventListener('submit', handleLogin);
+    loginButton.addEventListener('click', function(e) {
+        debug('Login button clicked');
+        if (!e.submitter) {  // If not triggered by form submit
+            handleLogin(e);
+        }
     });
 
-    debug('Login form initialized');
+    debug('Event listeners added successfully');
 }
 
 // Handle login submission
 async function handleLogin(e) {
-    debug('Login handler called');
+    debug('Login event triggered');
     e.preventDefault();
     
     const username = document.getElementById('username');
     const password = document.getElementById('password');
-    const loginButton = document.getElementById('login-button');
     
-    if (!username || !password || !loginButton) {
-        debug('Form elements not found');
+    if (!username || !password) {
+        debug('Username or password input not found');
         return;
     }
 
     const usernameValue = username.value.trim();
     const passwordValue = password.value.trim();
 
-    debug('Form values retrieved');
+    debug(`Username length: ${usernameValue.length}`);
+    debug(`Password length: ${passwordValue.length}`);
 
     if (!usernameValue || !passwordValue) {
         alert('Please enter both username and password.');
         return;
     }
 
-    loginButton.disabled = true;
-    debug('Attempting login...');
-
     try {
+        debug('Sending login request...');
         const response = await fetch(API_LOGIN_URL, {
             method: 'POST',
             headers: { 
@@ -114,25 +124,26 @@ async function handleLogin(e) {
             })
         });
 
-        debug(`Login response status: ${response.status}`);
+        debug(`Response status: ${response.status}`);
         const data = await response.json();
-        
+        debug(`Login response: ${JSON.stringify(data)}`);
+
         if (response.ok && data.apiKey) {
             debug('Login successful');
             apiKey = data.apiKey;
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('chat-container').style.display = 'flex';
-            initChat(); // Initialize chat after successful login
-            loadChatHistory(); // Load chat history after successful login
+            document.getElementById('send-button').disabled = false;
+            initChat();
+            loadChatHistory();
         } else {
-            debug('Login failed');
-            alert(data.error || 'Login failed');
-            loginButton.disabled = false;
+            debug(`Login failed: ${data.error || 'Unknown error'}`);
+            alert(data.error || 'Login failed.');
         }
     } catch (error) {
+        console.error('Login error:', error);
         debug(`Login error: ${error.message}`);
-        alert('Unable to connect to the server');
-        loginButton.disabled = false;
+        alert('Unable to connect to the server.');
     }
 }
 

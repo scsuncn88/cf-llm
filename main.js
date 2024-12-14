@@ -81,38 +81,67 @@ sendButton.addEventListener('click', async () => {
   sendButton.disabled = true;
 
   try {
-    console.log('Sending message to API:', API_CHAT_URL);
-    console.log('Message payload:', { type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' });
-
     const response = await fetch(API_CHAT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ type: isStreamMode ? 'stream' : 'chat', message, userId: 'user123' })
+      body: JSON.stringify({ 
+        type: isStreamMode ? 'stream' : 'chat', 
+        message, 
+        userId: 'user123' 
+      })
     });
 
-    console.log('Response status:', response.status);
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`Server error: ${response.status} - ${response.statusText}\n${errorText}`);
+      throw new Error(`Server error: ${response.status}`);
     }
 
     if (isStreamMode) {
-      // 处理流式响应
-      await handleStream(response);
+      // 创建一个临时的消息容器用于流式更新
+      const streamContainer = document.createElement('div');
+      streamContainer.className = 'message ai';
+      chatBox.appendChild(streamContainer);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let streamText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              streamText += data.response || '';
+              streamContainer.innerHTML = marked.parse(streamText);
+              
+              // 滚动到最新消息
+              chatBox.scrollTop = chatBox.scrollHeight;
+              
+              // 高亮代码块
+              streamContainer.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+              });
+            } catch (e) {
+              console.error('Failed to parse streaming data:', e);
+            }
+          }
+        }
+      }
     } else {
-      // 处理非流式 JSON 响应
       const data = await response.json();
-      console.log('Response body:', data);
       appendMessage(data.response || 'No response from AI.', 'ai');
     }
   } catch (error) {
-    appendMessage(`Error: Unable to connect. Details: ${error.message}`, 'ai');
-    console.error('Chat request error:', error);
+    appendMessage(`Error: ${error.message}`, 'ai');
+    console.error('Chat error:', error);
   } finally {
     sendButton.disabled = false;
   }
@@ -224,5 +253,69 @@ function appendMessage(content, className) {
   // 高亮代码块
   message.querySelectorAll('pre code').forEach((block) => {
     hljs.highlightBlock(block);
+  });
+}
+
+// 添加语音输入按钮
+const speechButton = document.createElement('button');
+speechButton.id = 'speech-button';
+speechButton.className = 'action-button';
+speechButton.innerHTML = `
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" stroke-width="2"/>
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 18.5V23" stroke="currentColor" stroke-width="2"/>
+  </svg>
+`;
+
+// 将语音按钮添加到输入区域
+document.querySelector('.input-container').insertBefore(
+  speechButton,
+  document.getElementById('send-button')
+);
+
+// 语音识别功能
+let recognition = null;
+if ('webkitSpeechRecognition' in window) {
+  recognition = new webkitSpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'zh-CN'; // 设置语言
+
+  recognition.onstart = () => {
+    speechButton.classList.add('recording');
+    messageInput.placeholder = '正在听...';
+    triggerHapticFeedback('medium');
+  };
+
+  recognition.onend = () => {
+    speechButton.classList.remove('recording');
+    messageInput.placeholder = 'Type your message...';
+    triggerHapticFeedback('light');
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = Array.from(event.results)
+      .map(result => result[0].transcript)
+      .join('');
+    
+    messageInput.value = transcript;
+    messageInput.focus();
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    messageInput.placeholder = 'Speech recognition error...';
+    setTimeout(() => {
+      messageInput.placeholder = 'Type your message...';
+    }, 2000);
+  };
+
+  // 语音按钮点击事件
+  speechButton.addEventListener('click', () => {
+    if (speechButton.classList.contains('recording')) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
   });
 }

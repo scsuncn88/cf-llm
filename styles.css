@@ -41,7 +41,7 @@ body {
   transition: all 0.3s ease;
 }
 
-/* 登录��器布局 */
+/* 登录器布局 */
 #auth-container {
   margin: 20px;
   width: calc(100% - 40px);
@@ -567,5 +567,36 @@ body {
   .input-group input {
     font-size: 16px;
     padding: 0.8rem 1rem;
+  }
+}
+
+/* 语音按钮样式 */
+#speech-button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  color: #6366f1;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+#speech-button.recording {
+  animation: pulse 1.5s infinite;
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* iOS 优化 */
+@supports (-webkit-touch-callout: none) {
+  #speech-button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

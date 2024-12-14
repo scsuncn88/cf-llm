@@ -41,22 +41,23 @@ body {
   transition: all 0.3s ease;
 }
 
-/* 登录��布局 */
+/* 登录��器布局 */
 #auth-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 400px;
-  padding: 2rem;
-  text-align: center;
+  margin: 20px;
+  padding: 2.5rem 2rem;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 #auth-container h2 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 1rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
 }
 
 .input-group {
@@ -66,30 +67,26 @@ body {
 
 .input-group input {
   width: 100%;
-  padding: 0.9rem 1.2rem;
+  padding: 1rem 1.2rem;
   border: none;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.5);
-  backdrop-filter: blur(5px);
-  font-size: 1rem;
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.05);
-  transition: box-shadow 0.2s ease;
-}
-
-.input-group input:focus {
-  outline: none;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    inset 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 #login-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  padding: 0.9rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  margin-top: 1rem;
 }
 
 #login-button:hover {
@@ -114,26 +111,20 @@ body {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   max-height: 100vh;
   overflow: hidden;
+  background: rgba(255, 255, 255, 0.85);
 }
 
 #toggle-stream {
-  position: absolute;
-  top: calc(1rem + env(safe-area-inset-top, 0));
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
   right: 1rem;
-  z-index: 2;
-  background: #48bb78;
+  background: #10b981;
   color: white;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  opacity: 0.9;
-  transition: opacity 0.2s;
-}
-
-#toggle-stream:hover {
-  opacity: 1;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
 /* 聊天区域 */
@@ -152,17 +143,17 @@ body {
 
 /* 消息气泡 */
 .message {
-  padding: 0.8rem 1rem;
-  border-radius: 20px;
+  padding: 1rem 1.2rem;
+  border-radius: 18px;
   margin-bottom: 1rem;
-  max-width: 80%;
+  max-width: 85%;
   word-wrap: break-word;
   position: relative;
   animation: messagePopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 @keyframes messagePopIn {
@@ -177,10 +168,12 @@ body {
 }
 
 .user {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: #fff;
   margin-left: auto;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+  margin-right: 0.5rem;
 }
 
 .user::before {
@@ -195,11 +188,13 @@ body {
 }
 
 .ai {
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.95);
   border: 1px solid rgba(0,0,0,0.05);
   color: #2d3748;
   margin-right: auto;
   border-bottom-left-radius: 4px;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .ai::before {
@@ -226,7 +221,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 4px 12px rgba(0, 0, 0, 0.1),
@@ -236,6 +231,10 @@ body {
   border-radius: 24px;
   padding: 0.5rem 0.7rem;
   margin-bottom: 0.5rem;
+  margin: 0.75rem;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    inset 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .input-container:focus-within {
@@ -249,7 +248,7 @@ body {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 0.5rem 0.7rem;
+  padding: 0.8rem 1rem;
   font-size: 1rem;
   line-height: 1.5;
   color: #1a1a1a;
@@ -271,12 +270,13 @@ body {
   color: white;
   border: none;
   border-radius: 20px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  margin-right: 0.5rem;
 }
 
 #send-button:hover {
@@ -292,6 +292,10 @@ body {
   backdrop-filter: blur(5px);
   border-top: 1px solid rgba(0,0,0,0.05);
   border-radius: 0 0 24px 24px;
+  padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .action-button {
@@ -300,14 +304,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
+  padding: 0.8rem;
+  border-radius: 16px;
+  font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
   transition: transform 0.2s ease;
   border: none;
   color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .action-button:hover {
@@ -315,11 +320,11 @@ body {
 }
 
 #file-label {
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }
 
 #camera-button {
-  background: linear-gradient(135deg, #34d399, #10b981);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 @media (max-width: 480px) {
@@ -480,4 +485,70 @@ body {
 @keyframes loadingDots {
   0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
   40% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, #1a1c2c 0%, #4a2b3c 100%);
+  }
+  
+  #auth-container {
+    background: rgba(30, 30, 40, 0.9);
+  }
+  
+  #auth-container h2 {
+    color: #e2e8f0;
+  }
+  
+  .input-group input {
+    background: rgba(40, 40, 50, 0.8);
+    color: #e2e8f0;
+  }
+  
+  .message.ai {
+    background: rgba(40, 40, 50, 0.95);
+    color: #e2e8f0;
+  }
+  
+  .input-container {
+    background: rgba(40, 40, 50, 0.95);
+  }
+  
+  #message-input {
+    color: #e2e8f0;
+  }
+  
+  .action-buttons {
+    background: rgba(30, 30, 40, 0.9);
+  }
+}
+
+/* iOS 特定优化 */
+@supports (-webkit-touch-callout: none) {
+  #chat-container {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .input-container {
+    margin-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  
+  /* 优化输入框在键盘弹出时的布局 */
+  @media (max-height: 700px) {
+    #chat-box {
+      height: calc(100vh - 180px - env(safe-area-inset-bottom));
+    }
+  }
+  
+  /* 禁用iOS默认的点击高亮 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 优化iOS滚动行为 */
+  #chat-box {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
 }

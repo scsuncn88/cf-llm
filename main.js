@@ -99,7 +99,7 @@ sendButton.addEventListener('click', async () => {
     }
 
     if (isStreamMode) {
-      // 创建一个临时的消息容器用于流式更新
+      // 创建消息容器
       const streamContainer = document.createElement('div');
       streamContainer.className = 'message ai';
       chatBox.appendChild(streamContainer);
@@ -108,32 +108,41 @@ sendButton.addEventListener('click', async () => {
       const decoder = new TextDecoder();
       let streamText = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              streamText += data.response || '';
-              streamContainer.innerHTML = marked.parse(streamText);
-              
-              // 滚动到最新消息
-              chatBox.scrollTop = chatBox.scrollHeight;
-              
-              // 高亮代码块
-              streamContainer.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-              });
-            } catch (e) {
-              console.error('Failed to parse streaming data:', e);
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.trim() === '') continue;
+            
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.response) {
+                  streamText += data.response;
+                  streamContainer.innerHTML = marked.parse(streamText);
+                  
+                  // 高亮代码块
+                  streamContainer.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightBlock(block);
+                  });
+                  
+                  // 滚动到底部
+                  chatBox.scrollTop = chatBox.scrollHeight;
+                }
+              } catch (e) {
+                console.error('Failed to parse streaming data:', e, line);
+              }
             }
           }
         }
+      } catch (error) {
+        console.error('Streaming error:', error);
+        streamContainer.innerHTML = 'Streaming error occurred';
       }
     } else {
       const data = await response.json();
@@ -190,46 +199,6 @@ fileInput.addEventListener('change', async (event) => {
   event.target.value = '';
 });
 
-async function handleStream(response) {
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = ''; // 用于缓存解码后的数据
-  let isDone = false; // 标记流式响应是否结束
-
-  while (!isDone) {
-    const { done, value } = await reader.read();
-    if (done) {
-      isDone = true;
-      break;
-    }
-
-    buffer += decoder.decode(value, { stream: true });
-
-    // 逐行处理
-    const lines = buffer.split('\n');
-    buffer = lines.pop(); // 保留未完整的一行
-
-    for (const line of lines) {
-      if (line.startsWith('event: ')) {
-        const event = line.slice(7).trim();
-        if (event === 'done') {
-          isDone = true;
-          break;
-        }
-      } else if (line.startsWith('data: ')) {
-        const json = line.slice(6).trim(); // 去掉 'data: ' 前缀
-        try {
-          const parsed = JSON.parse(json);
-          appendMessage(parsed.response || 'No response received.', 'ai');
-        } catch (error) {
-          console.error('Failed to parse SSE JSON:', error, json);
-          appendMessage(`Error: Failed to parse SSE JSON. Details: ${error.message}`, 'ai');
-        }
-      }
-    }
-  }
-}
-
 // 初始化 marked 配置
 marked.setOptions({
   highlight: function(code, lang) {
@@ -256,66 +225,70 @@ function appendMessage(content, className) {
   });
 }
 
-// 添加语音输入按钮
-const speechButton = document.createElement('button');
-speechButton.id = 'speech-button';
-speechButton.className = 'action-button';
-speechButton.innerHTML = `
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" stroke-width="2"/>
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 18.5V23" stroke="currentColor" stroke-width="2"/>
-  </svg>
-`;
+// 将语音相关代码包装在 DOMContentLoaded 事件中
+document.addEventListener('DOMContentLoaded', () => {
+  // 添加语音输入按钮
+  const speechButton = document.createElement('button');
+  speechButton.id = 'speech-button';
+  speechButton.className = 'action-button';
+  speechButton.innerHTML = `
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" stroke-width="2"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 18.5V23" stroke="currentColor" stroke-width="2"/>
+    </svg>
+  `;
 
-// 将语音按钮添加到输入区域
-document.querySelector('.input-container').insertBefore(
-  speechButton,
-  document.getElementById('send-button')
-);
+  const inputContainer = document.querySelector('.input-container');
+  if (inputContainer) {
+    inputContainer.insertBefore(
+      speechButton,
+      inputContainer.querySelector('#send-button')
+    );
 
-// 语音识别功能
-let recognition = null;
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.lang = 'zh-CN'; // 设置语言
+    // 语音识别功能
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'zh-CN';
 
-  recognition.onstart = () => {
-    speechButton.classList.add('recording');
-    messageInput.placeholder = '正在听...';
-    triggerHapticFeedback('medium');
-  };
+      recognition.onstart = () => {
+        speechButton.classList.add('recording');
+        messageInput.placeholder = '正在听...';
+        triggerHapticFeedback('medium');
+      };
 
-  recognition.onend = () => {
-    speechButton.classList.remove('recording');
-    messageInput.placeholder = 'Type your message...';
-    triggerHapticFeedback('light');
-  };
+      recognition.onend = () => {
+        speechButton.classList.remove('recording');
+        messageInput.placeholder = 'Type your message...';
+        triggerHapticFeedback('light');
+      };
 
-  recognition.onresult = (event) => {
-    const transcript = Array.from(event.results)
-      .map(result => result[0].transcript)
-      .join('');
-    
-    messageInput.value = transcript;
-    messageInput.focus();
-  };
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        
+        messageInput.value = transcript;
+        messageInput.focus();
+      };
 
-  recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-    messageInput.placeholder = 'Speech recognition error...';
-    setTimeout(() => {
-      messageInput.placeholder = 'Type your message...';
-    }, 2000);
-  };
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        messageInput.placeholder = 'Speech recognition error...';
+        setTimeout(() => {
+          messageInput.placeholder = 'Type your message...';
+        }, 2000);
+      };
 
-  // 语音按钮点击事件
-  speechButton.addEventListener('click', () => {
-    if (speechButton.classList.contains('recording')) {
-      recognition.stop();
-    } else {
-      recognition.start();
+      // 语音按钮点击事件
+      speechButton.addEventListener('click', () => {
+        if (speechButton.classList.contains('recording')) {
+          recognition.stop();
+        } else {
+          recognition.start();
+        }
+      });
     }
-  });
-}
+  }
+});

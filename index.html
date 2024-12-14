@@ -24,23 +24,25 @@
   <!-- Login interface -->
   <div id="auth-container">
     <h2>Welcome Back</h2>
-    <div class="input-group">
-      <input
-        type="text"
-        id="username"
-        placeholder="Username"
-        autocomplete="username"
-      />
-    </div>
-    <div class="input-group">
-      <input
-        type="password"
-        id="password"
-        placeholder="Password"
-        autocomplete="current-password"
-      />
-    </div>
-    <button id="login-button">Sign In</button>
+    <form id="login-form" onsubmit="return false;">
+      <div class="input-group">
+        <input
+          type="text"
+          id="username"
+          placeholder="Username"
+          autocomplete="username"
+        />
+      </div>
+      <div class="input-group">
+        <input
+          type="password"
+          id="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        />
+      </div>
+      <button id="login-button" type="submit">Sign In</button>
+    </form>
   </div>
 
   <!-- Chat interface -->

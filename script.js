@@ -60,28 +60,19 @@ function appendMessage(content, className) {
 function initLogin() {
     debug('Initializing login form');
     const loginForm = document.getElementById('login-form');
-    const loginButton = document.getElementById('login-button');
     
     debug(`Login form element: ${loginForm ? 'found' : 'not found'}`);
-    debug(`Login button element: ${loginButton ? 'found' : 'not found'}`);
 
-    if (!loginForm || !loginButton) {
-        console.error('Login form or button not found');
+    if (!loginForm) {
+        console.error('Login form not found');
         return;
     }
 
     // Remove any existing event listeners
     loginForm.removeEventListener('submit', handleLogin);
-    loginButton.removeEventListener('click', handleLogin);
 
-    // Add event listeners
+    // Add event listener for form submission
     loginForm.addEventListener('submit', handleLogin);
-    loginButton.addEventListener('click', function(e) {
-        debug('Login button clicked');
-        if (!e.submitter) {  // If not triggered by form submit
-            handleLogin(e);
-        }
-    });
 
     debug('Event listeners added successfully');
 }
@@ -93,9 +84,10 @@ async function handleLogin(e) {
     
     const username = document.getElementById('username');
     const password = document.getElementById('password');
+    const loginButton = document.getElementById('login-button');
     
-    if (!username || !password) {
-        debug('Username or password input not found');
+    if (!username || !password || !loginButton) {
+        debug('Form elements not found');
         return;
     }
 
@@ -109,6 +101,9 @@ async function handleLogin(e) {
         alert('Please enter both username and password.');
         return;
     }
+
+    // Disable login button during request
+    loginButton.disabled = true;
 
     try {
         debug('Sending login request...');
@@ -139,11 +134,13 @@ async function handleLogin(e) {
         } else {
             debug(`Login failed: ${data.error || 'Unknown error'}`);
             alert(data.error || 'Login failed.');
+            loginButton.disabled = false;
         }
     } catch (error) {
         console.error('Login error:', error);
         debug(`Login error: ${error.message}`);
         alert('Unable to connect to the server.');
+        loginButton.disabled = false;
     }
 }
 
